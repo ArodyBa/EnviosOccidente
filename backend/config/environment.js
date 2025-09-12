@@ -2,7 +2,7 @@
 const path = require('path');
 
 // Si no hay NODE_ENV definido, usar 'development' o 'production' por defecto
-const NODE_ENV = process.env.NODE_ENV || 'production';
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Cargar .env base primero
 require('dotenv').config();
@@ -13,7 +13,7 @@ require('dotenv').config({ path: path.resolve(process.cwd(), envFile) });
 
 const config = {
   // Configuración general
-  NODE_ENV: process.env.NODE_ENV || 'production',
+  NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: parseInt(process.env.PORT) || 3000,
   
   // Base de datos
