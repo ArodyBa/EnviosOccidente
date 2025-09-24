@@ -124,7 +124,7 @@ function convertirNumeroALetras(numero) {
 
     let num = parseInt(numStr, 10);
     let resultado = '';
-    
+
     // Convertir centenas
     if (num >= 100) {
       if (num === 100) {
@@ -135,7 +135,7 @@ function convertirNumeroALetras(numero) {
       num %= 100;
       if (num > 0) resultado += ' ';
     }
-    
+
     // Convertir decenas y unidades
     if (num > 0) {
       if (num < 10) {
@@ -148,7 +148,7 @@ function convertirNumeroALetras(numero) {
           if (Math.floor(num / 10) === 2 && num % 10 > 0) {
             resultado += ' Y ' + unidades[num % 10];
           } else {
-             resultado += ' Y ' + unidades[num % 10];
+            resultado += ' Y ' + unidades[num % 10];
           }
         }
       }
@@ -166,7 +166,7 @@ function convertirNumeroALetras(numero) {
     // Manejar miles
     const miles = Math.floor(numeroEntero / 1000);
     const restoMiles = numeroEntero % 1000;
-    
+
     if (miles > 0) {
       if (miles === 1) {
         textoEntero += 'MIL';
@@ -182,7 +182,7 @@ function convertirNumeroALetras(numero) {
     // Manejar millones
     const millones = Math.floor(numeroEntero / 1000000);
     const restoMillones = numeroEntero % 1000000;
-    
+
     if (millones > 0) {
       if (millones === 1) {
         textoEntero += 'UN MILLÓN';
@@ -220,110 +220,283 @@ const generarPDFFactura = (res, resFactura) => {
   img.src = logoAGOP;
 
   img.onload = () => {
-    // Declaraciones para el QR (correctamente colocadas una sola vez)
+    // Declaraciones para el QR
     const qrImageSize = 35;
     const fullQrCodeBase64 = "data:image/png;base64," + resFactura.datos.codigoQR;
 
-    // --- CABECERA (LOGO Y DATOS DE LA EMPRESA) ---
-    // Dibujar el logo de la empresa
-    doc.addImage(img, "PNG", 10, 10, 40, 20);
+    // --- CABECERA MEJORADA ---
+    // Logo en la esquina superior izquierda
+    doc.addImage(img, "PNG", 15, 15, 35, 18);
 
-    // Título y datos de la empresa
+    // Información de Armerías AGOP (centrada)
     doc.setFontSize(14);
-    doc.text("Armerías AGOP", 105, 15, { align: "center" });
-    doc.setFontSize(10);
-    doc.text("Dirección: 2da. Avenida, Zona 1, Malacatán, San Marcos", 105, 20, { align: "center" });
-    doc.text("Tel: 7937-4297", 105, 25, { align: "center" });
-    doc.text("Confianza y Seguridad en un mismo lugar", 105, 30, { align: "center" });
+    doc.setFont(undefined, 'bold');
+    doc.text("Armerías AGOP", 105, 20, { align: "center" });
 
-    // --- RECUADRO DE INFORMACIÓN DE FACTURA ---
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text("Dirección: 2da. Avenida, Zona 1, Malacatán, San Marcos", 105, 26, { align: "center" });
+    doc.text("Tel: 7937-4297", 105, 31, { align: "center" });
+    doc.text("Confianza y Seguridad en un mismo lugar", 105, 36, { align: "center" });
+
+    // --- RECUADRO "DOCUMENTO TRIBUTARIO ELECTRÓNICO" CON SERIE Y NÚMERO ---
     doc.setDrawColor(0);
-    // Ajuste del recuadro a 40 de alto para incluir todo el texto
-    doc.rect(140, 40, 60, 40); 
-    
-    // Título "Factura"
-    doc.setFontSize(12);
-    doc.text("Factura", 185, 45, { align: "right" });
-    
-    // Contenido del recuadro
-    doc.setFontSize(10);
-    doc.text(`Serie: ${resFactura?.datos.SerieDocumento}`, 145, 55);
-    doc.text(`Número: ${resFactura.datos.NumeroDocumento}`, 145, 60);
-    doc.text(`FECHA EMISIÓN: ${DateFormatter(resFactura.datos.FechaHoraEmision)}`, 145, 65);
-    doc.text(`MONEDA: GTQ`, 145, 70);
+    doc.setLineWidth(1);
+    // Alineado con el final del contenido principal (donde termina "TOTAL")
+    doc.roundedRect(150, 15, 45, 40, 3, 3);
 
-    // --- RECUADRO DE DATOS DEL CLIENTE ---
+    doc.setFontSize(6);
+    doc.setFont(undefined, 'bold');
+    doc.text("DOCUMENTO", 172.5, 20, { align: "center" });
+    doc.text("TRIBUTARIO", 172.5, 24, { align: "center" });
+    doc.text("ELECTRÓNICO", 172.5, 28, { align: "center" });
+    doc.setFontSize(9);
+    doc.text("Factura", 172.5, 34, { align: "center" });
+
+    // Serie y número dentro del mismo recuadro
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Serie:`, 152, 42);
+    doc.text(`${resFactura?.datos.SerieDocumento}`, 170, 42);
+    doc.text(`Número:`, 152, 47);
+    doc.text(`${resFactura.datos.NumeroDocumento}`, 170, 47);
+
+    // --- RECUADRO DE FECHA Y MONEDA (separado y alineado) ---
+    doc.roundedRect(150, 60, 45, 20, 2, 2);
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'bold');
+    doc.text("FECHA EMISIÓN", 172.5, 66, { align: "center" });
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(6);
+    doc.text(DateFormatter(resFactura.datos.FechaHoraEmision), 172.5, 70, { align: "center" });
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'bold');
+    doc.text("MONEDA", 172.5, 75, { align: "center" });
+    doc.setFont(undefined, 'normal');
+    doc.text("GTQ", 172.5, 78, { align: "center" });
+
+    // --- SECCIÓN "REFERENCIA" Y DATOS DEL CLIENTE ---
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text("Referencia", 10, 55);
+
+    // Recuadro para datos del cliente - alineado con donde empieza "CANT."
     doc.setDrawColor(0);
-    // Ajuste del recuadro a 20 de alto para incluir todo el texto
-    doc.rect(10, 65, 120, 20); 
-    
-    // Contenido del recuadro
-    doc.setFontSize(10);
-    doc.text(`NOMBRE: ${cliente?.nombre || "CF"}`, 15, 70);
-    doc.text(`NIT: ${cliente?.nit || "CF"}`, 15, 75);
-    doc.text(`DIRECCION: ${cliente?.direccion || ""}`, 15, 80);
+    doc.setLineWidth(1);
+    doc.roundedRect(10, 60, 135, 22, 3, 3);
 
-    // --- TABLA DE DETALLES CON BORDES (TEMA GRID) ---
+    // Contenido del recuadro del cliente
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text(`NOMBRE:`, 15, 68);
+    doc.setFont(undefined, 'normal');
+    doc.text(`${cliente?.nombre || "CF"}`, 55, 68);
+
+    doc.setFont(undefined, 'bold');
+    doc.text(`NIT:`, 15, 73);
+    doc.setFont(undefined, 'normal');
+    doc.text(`${cliente?.nit || "CF"}`, 40, 73);
+
+    doc.setFont(undefined, 'bold');
+    doc.text(`DIRECCIÓN:`, 15, 78);
+    doc.setFont(undefined, 'normal');
+    // Dividir texto largo si es necesario
+    const direccionTexto = doc.splitTextToSize(`${cliente?.direccion || "Ciudad"}`, 65);
+    doc.text(direccionTexto, 65, 78);
+
+    // --- TABLA DE DETALLES ---
     autoTable(doc, {
       startY: 90,
       head: [["CANT.", "TIPO", "CÓDIGO", "DESCRIPCIÓN", "P. UNIT.", "DESC.", "TOTAL"]],
       body: detalles.flatMap((item) =>
         item.series && item.series.length > 0
           ? item.series.map((serie) => [
-              1,
-              "B",
-              item.codigo || "",
-              `${item.descripcion} - Serie: ${serie}`,
-              `Q${item.precio_unitario.toFixed(2)}`,
-              `Q 0.00`,
-              `Q${item.precio_unitario.toFixed(2)}`,
-            ])
+            "1",
+            "B",
+            item.codigo || "",
+            `${item.descripcion} - Serie: ${serie}`,
+            `Q${item.precio_unitario.toFixed(2)}`,
+            `Q 0.00`,
+            `Q${item.precio_unitario.toFixed(2)}`,
+          ])
           : [[
-              item.cantidad,
-              "B",
-              item.codigo || "",
-              item.descripcion,
-              `Q${item.precio_unitario.toFixed(2)}`,
-              `Q 0.00`,
-              `Q${item.total.toFixed(2)}`,
-            ]]
+            item.cantidad.toString(),
+            "B",
+            item.codigo || "",
+            item.descripcion,
+            `Q${item.precio_unitario.toFixed(2)}`,
+            `Q 0.00`,
+            `Q${item.total.toFixed(2)}`,
+          ]]
       ),
       styles: {
-        halign: "left",
-        cellPadding: 3,
-        textColor: 20,
+        fontSize: 8,
+        cellPadding: 2,
+        textColor: [0, 0, 0],
+        lineColor: [0, 0, 0],
+        lineWidth: 0.3,
+        halign: 'left',
       },
       headStyles: {
         fillColor: [0, 0, 0],
         textColor: [255, 255, 255],
         halign: "center",
+        fontSize: 8,
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 15 }, // CANT
+        1: { halign: 'center', cellWidth: 15 }, // TIPO
+        2: { halign: 'center', cellWidth: 20 }, // CÓDIGO
+        3: { halign: 'left', cellWidth: 70 },   // DESCRIPCIÓN
+        4: { halign: 'right', cellWidth: 25 },  // P. UNIT
+        5: { halign: 'right', cellWidth: 20 },  // DESC
+        6: { halign: 'right', cellWidth: 25 },  // TOTAL
       },
       theme: "grid",
+      tableLineColor: [0, 0, 0],
+      tableLineWidth: 0.3,
+      margin: { left: 10, right: 10 },
+      tableWidth: 'wrap',
     });
 
-    // --- PIE DE PÁGINA ---
+    // --- SECCIÓN "SUJETO A PAGOS TRIMESTRALES ISR" ---
     let UltimaY = doc.lastAutoTable.finalY;
 
-    // Información de totales y certificador
-    doc.setFontSize(10);
-    doc.text(`TOTAL EN LETRAS`, 15, UltimaY + 10);
-    doc.text(`${convertirNumeroALetras(Number(resFactura?.datos.GranTotal).toFixed(2))}`, 15, UltimaY + 15);
+    // Crear rectángulo con fondo gris
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, UltimaY + 2, 185, 8, 'F');
 
-    doc.text(`TOTAL : ${Number(resFactura?.datos.GranTotal).toFixed(2)}`, 150, UltimaY + 5);
-    doc.text(`IVA : ${Number(resFactura?.datos.TotalImpuesto).toFixed(3)}`, 150, UltimaY + 10);
+    // Texto centrado
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text("SUJETO A PAGOS TRIMESTRALES ISR", 102.5, UltimaY + 7, { align: "center" });
 
-    doc.text(`AUTORIZACIÓN: ${resFactura?.datos.NumeroAutorizacion}`, 15, UltimaY + 25);
-    doc.text(`CERTIFICADOR: ${resFactura?.datos.NombreCertificador}`, 15, UltimaY + 30);
-    doc.text(`NIT: ${resFactura?.datos.NITCertificador}`, 15, UltimaY + 35);
-    doc.text(`FECHA CERTIFICACIÓN: ${DateFormatter(resFactura.datos.FechaHoraCertificacion)}`, 15, UltimaY + 40);
+    // --- SECCIÓN DE TOTALES Y LETRAS (UNA SOLA TABLA UNIFICADA) ---
+    const ySeccionTotales = UltimaY + 18;
 
-    // QR
-    doc.addImage(fullQrCodeBase64, 'PNG', 15, UltimaY + 50, qrImageSize, qrImageSize);
+    // Crear UNA SOLA tabla que incluya todo
+     autoTable(doc, {
+      startY: ySeccionTotales,
+      head: [],
+      body: [
+        // Fila "Resumen de impuestos" eliminada de aquí
+        ['TOTAL EN LETRAS', 'Subtotal', `${(Number(resFactura?.datos.GranTotal) - Number(resFactura?.datos.TotalImpuesto)).toFixed(2)}`],
+        [convertirNumeroALetras(Number(resFactura?.datos.GranTotal).toFixed(2)), 'Descuento', '0.00'],
+        ['', 'TOTAL', `${Number(resFactura?.datos.GranTotal).toFixed(2)}`],
+        // Nueva fila para IVA y "Resumen de impuestos"
+        [{ content: 'Resumen de impuestos', colSpan: 1, styles: { halign: 'center', fontStyle: 'bold' } }, 'IVA', `${Number(resFactura?.datos.TotalImpuesto).toFixed(2)}`]
+      ],
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        textColor: [0, 0, 0],
+        lineColor: [0, 0, 0],
+        lineWidth: 0.3,
+        halign: 'left',
+      },
+      columnStyles: {
+        0: { halign: 'left', cellWidth: 100 }, 
+        1: { halign: 'right', cellWidth: 45, fontStyle: 'bold' }, 
+        2: { halign: 'right', cellWidth: 45, fontStyle: 'bold' }, 
+      },
+      theme: "grid",
+      tableLineColor: [0, 0, 0],
+      tableLineWidth: 0.3,
+      margin: { left: 10, right: 10 },
+      showHead: false,
+      didDrawCell: function (data) {
+        // Ajusta los índices de fila si es necesario
+        // 'TOTAL EN LETRAS' ahora es row.index 0, column.index 0
+        if (data.row.index === 0 && data.column.index === 0) { 
+          data.cell.styles.fontStyle = 'bold';
+        }
+
+        // 'TOTAL' ahora es row.index 2, column.index 1
+        if (data.row.index === 2 && data.column.index === 1) { 
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 10;
+        }
+
+        // Estilo específico para la celda "Resumen de impuestos" en la última fila
+        if (data.row.index === 3 && data.column.index === 0) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.halign = 'center'; // Centra el texto "Resumen de impuestos"
+        }
+      }
+    });
+
+    // Eliminar esta línea, ya que el texto se agrega en la tabla
+    // doc.text("Resumen de impuestos", 60, UltimaYTabla - 15, { align: "center" });
+
+    // --- INFORMACIÓN DEL CERTIFICADOR CON QR ---
+    let UltimaYTotales = doc.lastAutoTable.finalY + 5;
+
+    autoTable(doc, {
+      startY: UltimaYTotales,
+      head: [],
+      body: [
+        ['AUTORIZACIÓN', `${resFactura?.datos.NumeroAutorizacion}`, {
+          content: '',
+          rowSpan: 4,
+          colSpan: 2,
+          styles: { halign: 'center', valign: 'middle', cellWidth: 55 }
+        }],
+        ['CERTIFICADOR', `${resFactura?.datos.NombreCertificador}`],
+        ['NIT', `${resFactura?.datos.NITCertificador}`],
+        ['FECHA CERTIFICACIÓN', `${DateFormatter(resFactura.datos.FechaHoraCertificacion)}`],
+      ],
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+        textColor: [0, 0, 0],
+        lineColor: [0, 0, 0],
+        lineWidth: 0.3,
+      },
+      columnStyles: {
+        0: { halign: 'left', fontStyle: 'bold' },
+        1: { halign: 'left' },
+        2: { halign: 'center', cellWidth: 25 },
+        3: { halign: 'center', cellWidth: 30 },
+      },
+      theme: "plain", // <-- CAMBIO CLAVE
+      margin: { left: 10, right: 10 },
+      showHead: false,
+      didDrawCell: function (data) {
+        const { cell, row, column } = data;
+        // Colocar el QR en la celda combinada
+        if (row.index === 0 && column.index === 2) {
+          const qrX = cell.x + (cell.width / 2) - (qrImageSize / 2);
+          const qrY = cell.y + (cell.height / 2) - (qrImageSize / 2);
+          doc.addImage(fullQrCodeBase64, 'PNG', qrX, qrY, qrImageSize, qrImageSize);
+        }
+      },
+
+      // Nuevo gancho para dibujar los bordes y la línea de separación
+      didDrawTable: function (data) {
+        const { table } = data;
+
+        // Dibuja el borde exterior redondeado
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(table.startX, table.startY, table.width, table.height, 3, 3);
+
+        // Dibuja la línea vertical que separa el texto del QR
+        const lineX = table.columns[2].x;
+        doc.line(lineX, table.startY, lineX, table.finalY);
+      }
+    });
+
+    // --- REFERENCIA EN EL PIE DE PÁGINA (POSICIÓN FIJA) ---
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.text("Referencia", 175, 275, { align: "center" });
+    doc.text("1 de 1", 175, 280, { align: "center" });
 
     doc.save(`Factura_${id_venta}.pdf`);
   };
 };
-
 
 const Ventas = () => {
   const [productos, setProductos] = useState([]);
