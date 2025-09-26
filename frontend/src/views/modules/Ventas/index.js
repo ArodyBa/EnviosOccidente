@@ -14,8 +14,8 @@ import {
   Autocomplete,
   IconButton,
   Menu,
-  Backdrop,              // ✅
-  CircularProgress       // ✅
+  Backdrop,
+  CircularProgress
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { getProductos } from "../../../services/modules/Productos";
@@ -23,10 +23,9 @@ import { insertarVenta, GenerarFactura, validarSeries } from "../../../services/
 import { getClientes } from "../../../services/modules/Clientes";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logoAGOP from "../../../assets/Logo.jpg"; // ✅ ahora JPG
+import logoAGOP from "../../../assets/Logo.jpg";
 
 /* -------------------- Helpers -------------------- */
-// ✅ (opcional) reducir QR al tamaño que realmente imprimirás
 async function shrinkQR(base64Png, sizePx = 256) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -44,7 +43,6 @@ async function shrinkQR(base64Png, sizePx = 256) {
   });
 }
 
-// ✅ crea doc con compresión y formato
 function createDoc() {
   return new jsPDF({
     unit: "mm",
@@ -115,7 +113,6 @@ function convertirNumeroALetras(numero) {
 }
 
 /* -------------------- Generadores PDF -------------------- */
-// ✅ usan logo ya precargado (HTMLImageElement) y "JPEG"
 const generarPDFVenta = (res, logoImgEl) => {
   const { cliente, detalles, id_venta } = res;
   const total = detalles.reduce((sum, item) => sum + item.total, 0);
@@ -173,8 +170,6 @@ const generarPDFFactura = async (res, resFactura, logoImgEl) => {
 
   const doc = createDoc();
   const qrImageSize = 35;
-
-  // ✅ reducir QR antes de insertarlo
   const fullQrCodeBase64 = await shrinkQR(resFactura?.datos?.codigoQR || "", 256);
 
   // --- Cabecera de la empresa (se mantiene) ---
@@ -423,16 +418,14 @@ const Ventas = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [seriesVenta, setSeriesVenta] = useState([]);
 
-  // ✅ loader UI
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("");
 
-  // ✅ precargar logo una vez
   const [logoImgEl, setLogoImgEl] = useState(null);
   useEffect(() => {
     const img = new Image();
     img.onload = () => setLogoImgEl(img);
-    img.src = logoAGOP; // JPG liviano
+    img.src = logoAGOP;
   }, []);
 
   const obtenerFechaLocal = () => {
@@ -475,19 +468,42 @@ const Ventas = () => {
   };
   useEffect(() => { cargarDatos(); }, []);
 
-  const handleOpenPrecioMenu = (e) => setAnchorEl(e.currentTarget);
+  // Refresca el producto al abrir menú de precios (por si hubo compras que cambiaron precios)
+  const handleOpenPrecioMenu = async (e) => {
+    setAnchorEl(e.currentTarget);
+    try {
+      const productosData = await getProductos();
+      setProductos(productosData);
+      if (productoSeleccionado) {
+        const selId = productoSeleccionado.id ?? productoSeleccionado.id_producto;
+        const actualizado = productosData.find(p => (p.id ?? p.id_producto) === selId);
+        if (actualizado) {
+          setProductoSeleccionado(actualizado);
+          // Si quieres: preseleccionar el precio base
+          // setPrecioSeleccionado(+actualizado.precio_venta || null);
+        }
+      }
+    } catch (err) {
+      console.error("No se pudo refrescar el producto", err);
+    }
+  };
+
   const handleClosePrecioMenu = () => setAnchorEl(null);
   const handleSeleccionarPrecio = (precio) => { setPrecioSeleccionado(precio); handleClosePrecioMenu(); };
 
   const agregarDetalle = () => {
-    if (!productoSeleccionado) return;
+    if (!productoSeleccionado) return alert("Seleccione un producto.");
     if (cantidad <= 0) return alert("Cantidad inválida");
-    if (productoSeleccionado.cantidad_inicial < cantidad) return alert("Cantidad excede stock");
+    if ((productoSeleccionado.cantidad_inicial ?? 0) < cantidad) return alert("Cantidad excede stock");
     if (seriesVenta.length !== cantidad || seriesVenta.some(s => !s)) return alert("Debe ingresar todas las series");
 
-    const precio = precioSeleccionado || parseFloat(productoSeleccionado.precio_venta);
+    const precio = Number(precioSeleccionado ?? productoSeleccionado.precio_venta);
+    if (!precio || isNaN(precio) || precio <= 0) return alert("Seleccione un precio válido.");
+
+    const prodId = productoSeleccionado.id ?? productoSeleccionado.id_producto;
+
     const nuevosDetalles = seriesVenta.map((serie) => ({
-      id_producto: productoSeleccionado.id,
+      id_producto: prodId,
       descripcion: `${productoSeleccionado.descripcion} - Serie: ${serie}`,
       cantidad: 1,
       precio_unitario: precio,
@@ -511,7 +527,6 @@ const Ventas = () => {
 
   const calcularTotal = () => detalleVenta.reduce((acc, item) => acc + item.total, 0);
 
-  // ✅ loader en todo el flujo (guardar -> certificar -> PDF)
   const guardarVenta = async () => {
     if (!idCliente) return alert("Debe seleccionar un cliente.");
     if (detalleVenta.length === 0) return alert("Debe agregar al menos un producto a la venta.");
@@ -554,7 +569,7 @@ const Ventas = () => {
 
         if (resFactura.exitoso) {
           setLoadingText("Generando PDF de la factura...");
-          await generarPDFFactura(res, resFactura, logoImgEl); // ✅ espera hasta que se genere y descargue
+          await generarPDFFactura(res, resFactura, logoImgEl);
         } else {
           alert("No se pudo certificar la factura.");
         }
@@ -565,7 +580,7 @@ const Ventas = () => {
 
       alert(res.message);
       setDetalleVenta([]);
-      setIdCliente("1"); // vuelve a CF
+      setIdCliente("1"); // vuelve a CF por defecto
     } catch (error) {
       console.error("Error al guardar venta", error);
       alert("Error al guardar la venta");
@@ -605,7 +620,7 @@ const Ventas = () => {
 
         <Grid item xs={12}>
           <Box display="flex" gap={2}>
-            <TextField label="Cantidad" type="number" value={cantidad} onChange={(e) => setCantidad(parseInt(e.target.value))} sx={{ width: "20%" }} />
+            <TextField label="Cantidad" type="number" value={cantidad} onChange={(e) => setCantidad(parseInt(e.target.value, 10) || 0)} sx={{ width: "20%" }} />
             <Box flexGrow={1}>
               <Autocomplete
                 freeSolo
@@ -627,17 +642,30 @@ const Ventas = () => {
             {productoSeleccionado && (
               <Box>
                 <Button variant="contained" size="small" onClick={handleOpenPrecioMenu} sx={{ minWidth: "40px", padding: 0, mb: 1 }}>P</Button>
-                {precioSeleccionado && <Typography variant="body2">Q{precioSeleccionado.toFixed(2)}</Typography>}
+                {precioSeleccionado && <Typography variant="body2">Q{Number(precioSeleccionado).toFixed(2)}</Typography>}
                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClosePrecioMenu}>
-                  <MenuItem onClick={() => handleSeleccionarPrecio(parseFloat(productoSeleccionado.precio_venta))}>
-                    Precio 1: Q{parseFloat(productoSeleccionado.precio_venta).toFixed(2)}
-                  </MenuItem>
-                  <MenuItem onClick={() => handleSeleccionarPrecio(parseFloat(productoSeleccionado.precio_venta) * 1.5)}>
-                    Precio 2: Q{(parseFloat(productoSeleccionado.precio_venta) * 1.5).toFixed(2)}
-                  </MenuItem>
-                  <MenuItem onClick={() => handleSeleccionarPrecio(parseFloat(productoSeleccionado.precio_venta) * 1.75)}>
-                    Precio 3: Q{(parseFloat(productoSeleccionado.precio_venta) * 1.75).toFixed(2)}
-                  </MenuItem>
+                  {/* Precio base desde BD */}
+                  {productoSeleccionado?.precio_venta && (
+                    <MenuItem onClick={() => handleSeleccionarPrecio(+productoSeleccionado.precio_venta)}>
+                      Precio: Q{Number(productoSeleccionado.precio_venta).toFixed(2)}
+                    </MenuItem>
+                  )}
+                  {/* Si manejas varios precios en BD, se muestran automáticamente */}
+                  {productoSeleccionado?.precio_publico && (
+                    <MenuItem onClick={() => handleSeleccionarPrecio(+productoSeleccionado.precio_publico)}>
+                      Público: Q{Number(productoSeleccionado.precio_publico).toFixed(2)}
+                    </MenuItem>
+                  )}
+                  {productoSeleccionado?.precio_mayoreo && (
+                    <MenuItem onClick={() => handleSeleccionarPrecio(+productoSeleccionado.precio_mayoreo)}>
+                      Mayoreo: Q{Number(productoSeleccionado.precio_mayoreo).toFixed(2)}
+                    </MenuItem>
+                  )}
+                  {productoSeleccionado?.precio_especial && (
+                    <MenuItem onClick={() => handleSeleccionarPrecio(+productoSeleccionado.precio_especial)}>
+                      Especial: Q{Number(productoSeleccionado.precio_especial).toFixed(2)}
+                    </MenuItem>
+                  )}
                 </Menu>
               </Box>
             )}
@@ -728,7 +756,6 @@ const Ventas = () => {
         </Button>
       </Box>
 
-      {/* ✅ Loader global */}
       <Backdrop open={loading} sx={{ color: "#fff", zIndex: (t) => t.zIndex.modal + 1 }}>
         <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
           <CircularProgress />

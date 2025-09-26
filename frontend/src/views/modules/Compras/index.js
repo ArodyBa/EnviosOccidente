@@ -16,15 +16,12 @@ const Compras = () => {
   const [productoInput, setProductoInput] = useState("");
   const [cantidad, setCantidad] = useState(0);
   const [precioVenta, setPrecioVenta] = useState("");
+  const [precioCompra, setPrecioCompra] = useState("");
   const [caducidad, setCaducidad] = useState("");
   const [idProveedor, setIdProveedor] = useState("");
   const [noFactura, setNoFactura] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
   const [series, setSeries] = useState([]);
-  const [precioCompra, setPrecioCompra] = useState("");
-
-
-
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -35,67 +32,64 @@ const Compras = () => {
     };
     cargarDatos();
   }, []);
-  /*
-    const agregarDetalle = () => {
-      if (productoSeleccionado && cantidad > 0) {
-        const producto = productos.find(p => p.id === productoSeleccionado.id);
-        const nuevoDetalle = {
-          id_producto: producto.id,
-          descripcion: producto.descripcion,
-          cantidad,
-          precio_unitario: producto.precio_compra,
-          total: cantidad * producto.precio_compra,
-          precio_venta: parseFloat(precioVenta),
-          caducidad
-        };
-        setDetalleCompra(prev => [...prev, nuevoDetalle]);
-        setCantidad(1);
-        setPrecioVenta("");
-        setCaducidad("");
-        setProductoSeleccionado(null);
-        setProductoInput("");
-      }
-    };
-  */
+
   const agregarDetalle = () => {
-    if (cantidad <= 0) {
+    if (!productoSeleccionado) {
+      alert("Debe seleccionar un producto.");
+      return;
+    }
+    if (!cantidad || isNaN(cantidad) || cantidad <= 0) {
       alert("La cantidad no puede ser 0 o menor.");
       return;
     }
-    if (!precioVenta || parseFloat(precioVenta) <= 0) {
+    if (!precioCompra || isNaN(precioCompra) || parseFloat(precioCompra) <= 0) {
+      alert("Debe ingresar un precio de compra válido.");
+      return;
+    }
+    if (!precioVenta || isNaN(precioVenta) || parseFloat(precioVenta) <= 0) {
       alert("Debe ingresar un precio de venta válido.");
       return;
     }
-    if (productoSeleccionado && cantidad > 0) {
-      // Validar que todas las series estén completas
-      if (series.length !== cantidad || series.some(s => !s.trim())) {
-        alert("Debe ingresar todas las series");
-        return;
-      }
-
-
-      const producto = productos.find(p => p.id === productoSeleccionado.id);
-      const nuevoDetalle = {
-        id_producto: producto.id,
-        descripcion: producto.descripcion,
-        cantidad,
-        precio_unitario: producto.precio_compra,
-        total: cantidad * producto.precio_compra,
-        precio_venta: parseFloat(precioVenta),
-        caducidad,
-        series // aquí se guarda el array de series
-      };
-
-      setDetalleCompra(prev => [...prev, nuevoDetalle]);
-
-      // Reset
-      setCantidad(1);
-      setPrecioVenta("");
-      setCaducidad("");
-      setProductoSeleccionado(null);
-      setProductoInput("");
-      setSeries([]); // limpia las series
+    // Validar series
+    if (series.length !== cantidad || series.some((s) => !String(s || "").trim())) {
+      alert("Debe ingresar todas las series.");
+      return;
     }
+
+    // Localiza el producto en el array (id o id_producto)
+    const prodIdSel = productoSeleccionado.id ?? productoSeleccionado.id_producto;
+    const producto = productos.find(
+      (p) => (p.id ?? p.id_producto) === prodIdSel
+    );
+    if (!producto) {
+      alert("Producto no encontrado en el catálogo.");
+      return;
+    }
+
+    const costo = parseFloat(precioCompra);
+    const pVenta = parseFloat(precioVenta);
+
+    const nuevoDetalle = {
+      id_producto: prodIdSel,                // <-- clave que espera el backend
+      descripcion: producto.descripcion,
+      cantidad,
+      precio_unitario: costo,                // costo ingresado
+      total: cantidad * costo,
+      precio_venta: pVenta,                  // precio de venta ingresado
+      caducidad: caducidad || null,
+      series: [...series],                   // arreglo de series
+    };
+
+    setDetalleCompra((prev) => [...prev, nuevoDetalle]);
+
+    // Reset
+    setCantidad(0);
+    setPrecioCompra("");
+    setPrecioVenta("");
+    setCaducidad("");
+    setProductoSeleccionado(null);
+    setProductoInput("");
+    setSeries([]);
   };
 
   const eliminarDetalle = (index) => {
@@ -109,24 +103,35 @@ const Compras = () => {
       alert("Debe seleccionar un proveedor.");
       return;
     }
+    if (detalleCompra.length === 0) {
+      alert("Debe agregar al menos un producto a la compra.");
+      return;
+    }
+
     const compra = {
       fecha,
       no_factura_compra: noFactura,
       id_proveedor: idProveedor,
-      detalles: detalleCompra
+      detalles: detalleCompra,
     };
+
     const res = await insertarCompra(compra);
-    alert(res.message);
+    alert(res.message || "Compra registrada exitosamente");
+
+    // Limpia detalle y refresca catálogo (para que Ventas vea precios/stock nuevos)
     setDetalleCompra([]);
+    const productosData = await getProductos();
+    setProductos(productosData);
   };
 
   const calcularTotal = () => {
-    return detalleCompra.reduce((sum, item) => sum + item.total, 0);
+    return detalleCompra.reduce((sum, item) => sum + Number(item.total || 0), 0);
   };
 
   return (
     <Box p={3}>
       <Typography variant="h5">Registrar Compra</Typography>
+
       <Grid container spacing={2} mt={2}>
         <Grid item xs={12} sm={4}>
           <TextField
@@ -136,11 +141,14 @@ const Compras = () => {
             onChange={(e) => setIdProveedor(e.target.value)}
             fullWidth
           >
-            {proveedores.map(p => (
-              <MenuItem key={p.id_proveedor} value={p.id_proveedor}>{p.nombre}</MenuItem>
+            {proveedores.map((p) => (
+              <MenuItem key={p.id_proveedor} value={p.id_proveedor}>
+                {p.nombre}
+              </MenuItem>
             ))}
           </TextField>
         </Grid>
+
         <Grid item xs={12} sm={4}>
           <TextField
             label="No. Factura"
@@ -149,6 +157,7 @@ const Compras = () => {
             fullWidth
           />
         </Grid>
+
         <Grid item xs={12} sm={4}>
           <TextField
             label="Fecha"
@@ -159,21 +168,22 @@ const Compras = () => {
             fullWidth
           />
         </Grid>
-        <Grid item xs={3}>
+
+        <Grid item xs={12} sm={3}>
           <TextField
             label="Cantidad"
             type="number"
             value={cantidad}
             onChange={(e) => {
-              const nuevaCantidad = parseInt(e.target.value);
+              const nuevaCantidad = parseInt(e.target.value, 10) || 0;
               setCantidad(nuevaCantidad);
-              setSeries(Array(nuevaCantidad).fill(""));
+              setSeries(Array(Math.max(nuevaCantidad, 0)).fill(""));
             }}
-            fullWidth  // Esto asegurará que use el espacio del grid
+            fullWidth
           />
         </Grid>
 
-        <Grid item xs={6}>
+        <Grid item xs={12} sm={6}>
           <Autocomplete
             freeSolo
             options={productos}
@@ -184,6 +194,7 @@ const Compras = () => {
             onInputChange={(event, newInputValue) => setProductoInput(newInputValue)}
             renderInput={(params) => <TextField {...params} label="Producto" fullWidth />}
           />
+
           {productoSeleccionado && cantidad > 0 && (
             <Box mt={2}>
               <Typography variant="subtitle1">Ingrese las series:</Typography>
@@ -203,9 +214,9 @@ const Compras = () => {
               ))}
             </Box>
           )}
-
         </Grid>
-        <Grid item xs={3}>
+
+        <Grid item xs={12} sm={3}>
           <TextField
             label="Precio Compra"
             type="number"
@@ -215,8 +226,7 @@ const Compras = () => {
           />
         </Grid>
 
-        <Grid item xs={3}>
-
+        <Grid item xs={12} sm={3}>
           <TextField
             label="Precio Venta"
             type="number"
@@ -226,8 +236,21 @@ const Compras = () => {
           />
         </Grid>
 
-        <Grid item xs={2}>
-          <Button fullWidth variant="contained" onClick={agregarDetalle}>Agregar</Button>
+        <Grid item xs={12} sm={3}>
+          <TextField
+            label="Caducidad (opcional)"
+            type="date"
+            value={caducidad}
+            onChange={(e) => setCaducidad(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+        </Grid>
+
+        <Grid item xs={12} sm="auto">
+          <Button fullWidth variant="contained" onClick={agregarDetalle}>
+            Agregar
+          </Button>
         </Grid>
       </Grid>
 
@@ -249,9 +272,9 @@ const Compras = () => {
               <TableRow key={idx}>
                 <TableCell>{item.descripcion}</TableCell>
                 <TableCell>{item.cantidad}</TableCell>
-                <TableCell>Q{item.precio_unitario}</TableCell>
-                <TableCell>Q{item.precio_venta}</TableCell>
-                <TableCell>Q{item.total}</TableCell>
+                <TableCell>Q{Number(item.precio_unitario).toFixed(2)}</TableCell>
+                <TableCell>Q{Number(item.precio_venta).toFixed(2)}</TableCell>
+                <TableCell>Q{Number(item.total).toFixed(2)}</TableCell>
                 <TableCell>
                   <IconButton onClick={() => eliminarDetalle(idx)} color="error">
                     <DeleteIcon />
@@ -260,15 +283,19 @@ const Compras = () => {
               </TableRow>
             ))}
             <TableRow>
-              <TableCell colSpan={4} align="right"><strong>Total:</strong></TableCell>
-              <TableCell colSpan={3}>Q{calcularTotal().toFixed(2)}</TableCell>
+              <TableCell colSpan={4} align="right">
+                <strong>Total:</strong>
+              </TableCell>
+              <TableCell colSpan={2}>Q{calcularTotal().toFixed(2)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
       </Box>
 
       <Box mt={3}>
-        <Button variant="contained" color="success" onClick={guardarCompra}>Guardar Compra</Button>
+        <Button variant="contained" color="success" onClick={guardarCompra}>
+          Guardar Compra
+        </Button>
       </Box>
     </Box>
   );

@@ -1,7 +1,7 @@
 const { pool, promisePool } = require("../config/db");
 
 // Crear compra principal y su detalle
-const crearCompra = async (req, res) => {
+/* const crearCompra = async (req, res) => {
   const { fecha, no_factura_compra, id_proveedor, detalles } = req.body;
 
   const conn = await pool.promise().getConnection();
@@ -52,6 +52,96 @@ const crearCompra = async (req, res) => {
     await conn.rollback();
     console.error("Error al registrar compra:", error.message);
     res.status(500).json({ message: "Error al registrar compra", error });
+  } finally {
+    conn.release();
+  }
+};
+*/
+const crearCompra = async (req, res) => {
+  const { fecha, no_factura_compra, id_proveedor, detalles } = req.body;
+
+  const conn = await pool.promise().getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [compraRes] = await conn.query(
+      "INSERT INTO compras (fecha, no_factura_compra, id_proveedor) VALUES (?, ?, ?)",
+      [fecha, no_factura_compra, id_proveedor]
+    );
+    const compraId = compraRes.insertId;
+
+    for (const item of detalles) {
+      // Sanitiza/asegura números
+      const cantidad   = Number(item.cantidad) || 0;
+      const costo      = Number(item.precio_unitario) || 0;    // costo
+      const precioVent = Number(item.precio_venta) || 0;
+
+      await conn.query(
+        `INSERT INTO detalle_compras 
+         (id_compra, id_producto, cantidad_compra, descripcion, precio_unitario_compra, total_compra, precio_venta, caducidad) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          compraId,
+          item.id_producto,
+          cantidad,
+          item.descripcion,
+          costo,
+          cantidad * costo,
+          precioVent,
+          item.caducidad || null
+        ]
+      );
+
+      // SERIES (opcional: bloquear duplicados)
+      if (item.series && item.series.length > 0) {
+        // Recomendado: tener índice único (id_producto, serie)
+        // CREATE UNIQUE INDEX ux_series ON series_compra (id_producto, serie);
+        for (const serieRaw of item.series) {
+          const serie = (serieRaw || "").trim();
+          if (!serie) continue;
+          await conn.query(
+            `INSERT INTO series_compra (id_compra, id_producto, serie) 
+             VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE id_compra = VALUES(id_compra)`,
+            [compraId, item.id_producto, serie]
+          );
+        }
+      }
+
+      // Aumentar stock
+      await conn.query(
+        "UPDATE productos SET cantidad_inicial = cantidad_inicial + ? WHERE id_producto = ?",
+        [cantidad, item.id_producto]
+      );
+
+      // 🔥 ACTUALIZAR PRECIOS DEL PRODUCTO (clave de tu problema)
+      if (costo > 0 || precioVent > 0) {
+        // si manejas múltiples precios, ajusta aquí (precio_publico, mayoreo, especial)
+        await conn.query(
+          `UPDATE productos 
+             SET 
+               precio_compra = CASE WHEN ? > 0 THEN ? ELSE precio_compra END,
+               precio_venta  = CASE WHEN ? > 0 THEN ? ELSE precio_venta  END
+               
+           WHERE id_producto = ?`,
+          [costo, costo, precioVent, precioVent, item.id_producto]
+        );
+
+        // (Opcional) Insertar histórico de precios
+        // await conn.query(
+        //   `INSERT INTO historico_precios (id_producto, precio_compra, precio_venta, fecha)
+        //    VALUES (?, ?, ?, NOW())`,
+        //   [item.id_producto, costo, precioVent]
+        // );
+      }
+    }
+
+    await conn.commit();
+    res.json({ message: "Compra registrada exitosamente", id_compra: compraId });
+  } catch (error) {
+    await conn.rollback();
+    console.error("Error al registrar compra:", error.message);
+    res.status(500).json({ message: "Error al registrar compra", error: error.message });
   } finally {
     conn.release();
   }
