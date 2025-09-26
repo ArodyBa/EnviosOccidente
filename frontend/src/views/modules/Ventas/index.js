@@ -142,23 +142,23 @@ const generarPDFVenta = (res, logoImgEl) => {
     startY: 65,
     head: [["Cantidad", "Descripción", "Precio Unitario", "Total"]],
     body: detalles.flatMap((item) =>
-      (item.series && item.series.length > 0
-        ? item.series.map((serie) => [
-            1,
-            `${item.descripcion} - Serie: ${serie}`,
-            `Q${item.precio_unitario.toFixed(2)}`,
-            `Q${item.precio_unitario.toFixed(2)}`,
-          ])
-        : [[
-            item.cantidad,
-            item.descripcion,
-            `Q${item.precio_unitario.toFixed(2)}`,
-            `Q${item.total.toFixed(2)}`,
-          ]]
-      )
+    (item.series && item.series.length > 0
+      ? item.series.map((serie) => [
+        1,
+        `${item.descripcion} - Serie: ${serie}`,
+        `Q${item.precio_unitario.toFixed(2)}`,
+        `Q${item.precio_unitario.toFixed(2)}`,
+      ])
+      : [[
+        item.cantidad,
+        item.descripcion,
+        `Q${item.precio_unitario.toFixed(2)}`,
+        `Q${item.total.toFixed(2)}`,
+      ]]
+    )
     ),
-    styles: { halign: "center", lineWidth: 0.3, lineColor: [0,0,0], cellPadding: 3, textColor: 20 },
-    headStyles: { fillColor: [0,0,0], textColor: [255,255,255], halign: "center" },
+    styles: { halign: "center", lineWidth: 0.3, lineColor: [0, 0, 0], cellPadding: 3, textColor: 20 },
+    headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], halign: "center" },
     theme: "grid",
   });
 
@@ -177,6 +177,7 @@ const generarPDFFactura = async (res, resFactura, logoImgEl) => {
   // ✅ reducir QR antes de insertarlo
   const fullQrCodeBase64 = await shrinkQR(resFactura?.datos?.codigoQR || "", 256);
 
+  // --- Cabecera de la empresa (se mantiene) ---
   if (logoImgEl) doc.addImage(logoImgEl, "JPEG", 15, 15, 35, 18);
 
   doc.setFontSize(14);
@@ -189,64 +190,91 @@ const generarPDFFactura = async (res, resFactura, logoImgEl) => {
   doc.text("Tel: 7937-4297", 105, 31, { align: "center" });
   doc.text("Confianza y Seguridad en un mismo lugar", 105, 36, { align: "center" });
 
-  doc.setDrawColor(0);
-  doc.setLineWidth(1);
-  doc.roundedRect(150, 15, 45, 40, 3, 3);
-  doc.setFontSize(6);
-  doc.setFont(undefined, 'bold');
-  doc.text("DOCUMENTO", 172.5, 20, { align: "center" });
-  doc.text("TRIBUTARIO", 172.5, 24, { align: "center" });
-  doc.text("ELECTRÓNICO", 172.5, 28, { align: "center" });
-  doc.setFontSize(9);
-  doc.text("Factura", 172.5, 34, { align: "center" });
-
-  doc.setFontSize(7);
-  doc.setFont(undefined, 'normal');
-  doc.text(`Serie:`, 152, 42);
-  doc.text(`${resFactura?.datos?.SerieDocumento || ""}`, 170, 42);
-  doc.text(`Número:`, 152, 47);
-  doc.text(`${resFactura?.datos?.NumeroDocumento || ""}`, 170, 47);
-
-  doc.roundedRect(150, 60, 45, 20, 2, 2);
-  doc.setFontSize(7);
-  doc.setFont(undefined, 'bold');
-  doc.text("FECHA EMISIÓN", 172.5, 66, { align: "center" });
-  doc.setFont(undefined, 'normal');
-  doc.setFontSize(6);
-  doc.text(DateFormatter(resFactura?.datos?.FechaHoraEmision), 172.5, 70, { align: "center" });
-  doc.setFontSize(7);
-  doc.setFont(undefined, 'bold');
-  doc.text("MONEDA", 172.5, 75, { align: "center" });
-  doc.setFont(undefined, 'normal');
-  doc.text("GTQ", 172.5, 78, { align: "center" });
-
-  doc.setFontSize(9);
-  doc.setFont(undefined, 'normal');
-  doc.text("Referencia", 10, 55);
+  // ----------------------------------------------------------------------
+  // ✅ SECCIÓN 1: DOCUMENTO Y FECHA (AJUSTE DE POSICIÓN Y ANCHO)
+  // ----------------------------------------------------------------------
+  const xStartDTE = 145; // Nueva posición de inicio (antes 150)
+  const widthDTE = 55;   // Nuevo ancho (antes 45). Termina en 145 + 55 = 200 (margen de la línea azul).
+  const xCenterDTE = xStartDTE + (widthDTE / 2); // 145 + 27.5 = 172.5
 
   doc.setDrawColor(0);
   doc.setLineWidth(1);
-  doc.roundedRect(10, 60, 135, 22, 3, 3);
+  doc.roundedRect(xStartDTE, 15, widthDTE, 55, 3, 3);
 
+  doc.setFontSize(6);
+  doc.setFont(undefined, 'bold');
+  doc.text("DOCUMENTO", xCenterDTE, 20, { align: "center" });
+  doc.text("TRIBUTARIO", xCenterDTE, 24, { align: "center" });
+  doc.text("ELECTRÓNICO", xCenterDTE, 28, { align: "center" });
+  doc.setFontSize(9);
+  doc.text("Factura", xCenterDTE, 33, { align: "center" });
+
+  doc.setFontSize(7);
+  doc.setFont(undefined, 'normal');
+  // Se mueve el texto de serie y número
+  doc.text(`Serie:`, xStartDTE + 2, 39);
+  doc.text(`${resFactura?.datos?.SerieDocumento || ""}`, xStartDTE + 30, 39); // Ajuste de posición
+  doc.text(`Número:`, xStartDTE + 2, 44);
+  doc.text(`${resFactura?.datos?.NumeroDocumento || ""}`, xStartDTE + 30, 44); // Ajuste de posición
+
+  doc.setFontSize(7);
+  doc.setFont(undefined, 'bold');
+  doc.text("FECHA EMISIÓN", xCenterDTE, 51, { align: "center" });
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(6);
+  doc.text(DateFormatter(resFactura?.datos?.FechaHoraEmision), xCenterDTE, 55, { align: "center" });
+  doc.setFontSize(7);
+  doc.setFont(undefined, 'bold');
+  doc.text("MONEDA", xCenterDTE, 60, { align: "center" });
+  doc.setFont(undefined, 'normal');
+  doc.text("GTQ", xCenterDTE, 63, { align: "center" });
+
+  // ----------------------------------------------------------------------
+  // SECCIÓN 2: DATOS DEL CLIENTE (Mantenido el ajuste para no chocar)
+  // ----------------------------------------------------------------------
+  const yBloqueCliente = 45;
+  const xTextStart = 40; 
+  // Ancho ahora llega hasta 145, ya que el DTE empieza ahí.
+  const anchoRectCliente = xStartDTE - 10 - 5; // 145 - 10 - 5 = 130mm (Ajustado para dejar un pequeño espacio)
+  // Nota: El ancho era 135 antes del ajuste, lo dejaremos en 130 para asegurar el espacio visual entre rectángulos.
+
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'normal');
+  doc.text("Referencia", 10, yBloqueCliente);
+
+  doc.setDrawColor(0);
+  doc.setLineWidth(1);
+
+  const yRectCliente = yBloqueCliente + 3; 
+  const hRectCliente = 21; 
+  doc.roundedRect(10, yRectCliente, anchoRectCliente, hRectCliente, 3, 3); 
+
+  // 1. NOMBRE:
   doc.setFontSize(10);
   doc.setFont(undefined, 'bold');
-  doc.text(`NOMBRE:`, 15, 68);
+  doc.text(`NOMBRE:`, 15, yRectCliente + 5); 
   doc.setFont(undefined, 'normal');
-  doc.text(`${cliente?.nombre || "CF"}`, 55, 68);
+  doc.text(`${cliente?.nombre || "CF"}`, xTextStart, yRectCliente + 5); 
 
+  // 2. NIT:
   doc.setFont(undefined, 'bold');
-  doc.text(`NIT:`, 15, 73);
+  doc.text(`NIT:`, 15, yRectCliente + 12); 
   doc.setFont(undefined, 'normal');
-  doc.text(`${cliente?.nit || "CF"}`, 40, 73);
+  doc.text(`${cliente?.nit || "CF"}`, xTextStart, yRectCliente + 12); 
 
+  // 3. DIRECCIÓN:
   doc.setFont(undefined, 'bold');
-  doc.text(`DIRECCIÓN:`, 15, 78);
+  doc.text(`DIRECCIÓN:`, 15, yRectCliente + 17); 
   doc.setFont(undefined, 'normal');
-  const direccionTexto = doc.splitTextToSize(`${cliente?.direccion || "Ciudad"}`, 65);
-  doc.text(direccionTexto, 65, 78);
+  // Ajustar el ancho del splitTextToSize al nuevo ancho (130 - 40 - 5 = 85)
+  const direccionTexto = doc.splitTextToSize(`${cliente?.direccion || "Ciudad"}`, 85); 
+  doc.text(direccionTexto, xTextStart, yRectCliente + 17); 
 
+  // ----------------------------------------------------------------------
+  // TABLA DE DETALLES (Mantiene ancho uniforme de 190)
+  // ----------------------------------------------------------------------
   autoTable(doc, {
-    startY: 90,
+    startY: 75,
     head: [["CANT.", "TIPO", "CÓDIGO", "DESCRIPCIÓN", "P. UNIT.", "DESC.", "TOTAL"]],
     body: detalles.flatMap((item) =>
       item.series && item.series.length > 0
@@ -265,22 +293,23 @@ const generarPDFFactura = async (res, resFactura, logoImgEl) => {
             `Q${item.total.toFixed(2)}`
           ]]
     ),
-    styles: { fontSize: 8, cellPadding: 2, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.3, halign: 'left' },
-    headStyles: { fillColor: [0,0,0], textColor: [255,255,255], halign: "center", fontSize: 8, fontStyle: 'bold' },
+    styles: { fontSize: 8, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.3, halign: 'left' },
+    headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], halign: "center", fontSize: 8, fontStyle: 'bold' },
     columnStyles: {
       0: { halign: 'center', cellWidth: 15 },
       1: { halign: 'center', cellWidth: 15 },
       2: { halign: 'center', cellWidth: 20 },
-      3: { halign: 'left',   cellWidth: 70 },
-      4: { halign: 'right',  cellWidth: 25 },
-      5: { halign: 'right',  cellWidth: 20 },
-      6: { halign: 'right',  cellWidth: 25 },
+      3: { halign: 'left', cellWidth: 70 },
+      4: { halign: 'right', cellWidth: 25 },
+      5: { halign: 'right', cellWidth: 20 },
+      6: { halign: 'right', cellWidth: 25 },
     },
     theme: "grid",
     margin: { left: 10, right: 10 },
-    tableWidth: 'wrap',
+    tableWidth: 190, 
   });
 
+  // --- Recuadro ISR ---
   let UltimaY = doc.lastAutoTable.finalY;
   doc.setFillColor(240, 240, 240);
   doc.rect(10, UltimaY + 2, 185, 8, 'F');
@@ -289,67 +318,85 @@ const generarPDFFactura = async (res, resFactura, logoImgEl) => {
   doc.setTextColor(0, 0, 0);
   doc.text("SUJETO A PAGOS TRIMESTRALES ISR", 102.5, UltimaY + 7, { align: "center" });
 
+  // ----------------------------------------------------------------------
+  // TABLA DE TOTALES Y CERTIFICACIÓN (Fusionada y con ancho uniforme de 190)
+  // ----------------------------------------------------------------------
   const ySeccionTotales = UltimaY + 18;
+  
   autoTable(doc, {
     startY: ySeccionTotales,
     head: [],
+    // Cuerpo de la tabla con 8 filas y 3 columnas para manejar los datos
     body: [
-      ['TOTAL EN LETRAS', 'Subtotal', `${(Number(resFactura?.datos?.GranTotal) - Number(resFactura?.datos?.TotalImpuesto)).toFixed(2)}`],
-      [convertirNumeroALetras(Number(resFactura?.datos?.GranTotal).toFixed(2)), 'Descuento', '0.00'],
-      ['', 'TOTAL', `${Number(resFactura?.datos?.GranTotal).toFixed(2)}`],
-      [{ content: 'Resumen de impuestos', colSpan: 1, styles: { halign: 'center', fontStyle: 'bold' } }, 'IVA', `${Number(resFactura?.datos?.TotalImpuesto).toFixed(2)}`]
+        // Filas de Totales (4 filas)
+        ['TOTAL EN LETRAS', 'Subtotal', `${(Number(resFactura?.datos?.GranTotal) - Number(resFactura?.datos?.TotalImpuesto)).toFixed(2)}`],
+        [convertirNumeroALetras(Number(resFactura?.datos?.GranTotal).toFixed(2)), 'Descuento', '0.00'],
+        ['', 'TOTAL', `${Number(resFactura?.datos?.GranTotal).toFixed(2)}`],
+        [{ content: 'Resumen de impuestos', colSpan: 1, styles: { halign: 'center', fontStyle: 'bold' } }, 'IVA', `${Number(resFactura?.datos?.TotalImpuesto).toFixed(2)}`],
+        
+        // Filas de Certificación (4 filas), Col 2 es la celda del QR con rowspan
+        ['AUTORIZACIÓN', `${resFactura?.datos?.NumeroAutorizacion || ""}`, { content: '', rowSpan: 4, styles: { halign: 'center', valign: 'middle' } }],
+        ['CERTIFICADOR', `${resFactura?.datos?.NombreCertificador || ""}`],
+        ['NIT', `${resFactura?.datos?.NITCertificador || ""}`],
+        ['FECHA CERTIFICACIÓN', `${DateFormatter(resFactura?.datos?.FechaHoraCertificacion)}`],
     ],
-    styles: { fontSize: 9, cellPadding: 3, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.3, halign: 'left' },
+    // Estilos unificados con la tabla de detalles (FontSize: 8)
+    styles: { fontSize: 8, cellPadding: 3, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.3, halign: 'left' },
     columnStyles: {
-      0: { halign: 'left',  cellWidth: 100 },
-      1: { halign: 'right', cellWidth: 45, fontStyle: 'bold' },
-      2: { halign: 'right', cellWidth: 45, fontStyle: 'bold' },
+        // Columna de títulos (TOTAL EN LETRAS, Resumen, Títulos de Certificación)
+        0: { halign: 'left', cellWidth: 55 }, 
+        // Columna de subtítulos/datos (Subtotal/Descuento/TOTAL/IVA y Datos de Certificación)
+        1: { halign: 'left', cellWidth: 80 }, 
+        // Columna de Montos y QR
+        2: { halign: 'right', cellWidth: 55 },
     },
     theme: "grid",
+    tableWidth: 190, 
     margin: { left: 10, right: 10 },
     showHead: false,
     didDrawCell: (data) => {
-      if (data.row.index === 0 && data.column.index === 0) data.cell.styles.fontStyle = 'bold';
-      if (data.row.index === 2 && data.column.index === 1) { data.cell.styles.fontStyle = 'bold'; data.cell.styles.fontSize = 10; }
-      if (data.row.index === 3 && data.column.index === 0) { data.cell.styles.fontStyle = 'bold'; data.cell.styles.halign = 'center'; }
-    }
-  });
+        const { cell, row, column } = data;
+        
+        // --- Estilos y Contenido de las Filas de Totales (Índices 0-3) ---
+        if (row.index === 0 && column.index === 0) data.cell.styles.fontStyle = 'bold';
+        
+        // Resaltar TOTAL
+        if (row.index === 2 && column.index === 1) { data.cell.styles.fontStyle = 'bold'; data.cell.styles.fontSize = 9; data.cell.styles.halign = 'right'; } 
+        if (row.index === 2 && column.index === 2) { data.cell.styles.fontStyle = 'bold'; data.cell.styles.fontSize = 9; } 
+        
+        // Aplicar Negrita a los títulos de la columna 1 de Totales (Subtotal/Descuento/TOTAL/IVA)
+        if (row.index <= 3 && column.index === 1) data.cell.styles.fontStyle = 'bold'; 
+        // Aplicar Negrita a los montos de la columna 2 de Totales
+        if (row.index <= 3 && column.index === 2) data.cell.styles.fontStyle = 'bold';
+        // Alinear a la derecha los títulos de la columna 1 de Totales
+        if (row.index <= 3 && column.index === 1) data.cell.styles.halign = 'right';
 
-  let UltimaYTotales = doc.lastAutoTable.finalY + 5;
-  autoTable(doc, {
-    startY: UltimaYTotales,
-    head: [],
-    body: [
-      ['AUTORIZACIÓN', `${resFactura?.datos?.NumeroAutorizacion || ""}`, { content: '', rowSpan: 4, colSpan: 2, styles: { halign: 'center', valign: 'middle', cellWidth: 55 } }],
-      ['CERTIFICADOR', `${resFactura?.datos?.NombreCertificador || ""}`],
-      ['NIT', `${resFactura?.datos?.NITCertificador || ""}`],
-      ['FECHA CERTIFICACIÓN', `${DateFormatter(resFactura?.datos?.FechaHoraCertificacion)}`],
-    ],
-    styles: { fontSize: 8, cellPadding: 3, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.3 },
-    columnStyles: {
-      0: { halign: 'left', fontStyle: 'bold' },
-      1: { halign: 'left' },
-      2: { halign: 'center', cellWidth: 25 },
-      3: { halign: 'center', cellWidth: 30 },
-    },
-    theme: "plain",
-    margin: { left: 10, right: 10 },
-    showHead: false,
-    didDrawCell: (data) => {
-      const { cell, row, column } = data;
-      if (row.index === 0 && column.index === 2) {
-        const qrX = cell.x + (cell.width / 2) - (qrImageSize / 2);
-        const qrY = cell.y + (cell.height / 2) - (qrImageSize / 2);
-        doc.addImage(fullQrCodeBase64, 'PNG', qrX, qrY, qrImageSize, qrImageSize);
-      }
+
+        // --- Estilos de las Filas de Certificación (Índices 4-7) ---
+        if (row.index >= 4 && column.index === 0) data.cell.styles.fontStyle = 'bold'; // Títulos de Certificación
+        
+        // DIBUJAR QR (Celda de índice 4, Columna de índice 2)
+        if (row.index === 4 && column.index === 2) { 
+            const qrX = cell.x + (cell.width / 2) - (qrImageSize / 2);
+            const qrY = cell.y + (cell.height / 2) - (qrImageSize / 2);
+            doc.addImage(fullQrCodeBase64, 'PNG', qrX, qrY, qrImageSize, qrImageSize);
+        }
     },
     didDrawTable: (data) => {
-      const { table } = data;
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(table.startX, table.startY, table.width, table.height, 3, 3);
-      const lineX = table.columns[2].x;
-      doc.line(lineX, table.startY, lineX, table.finalY);
+        const { table } = data;
+        
+        // 1. Dibuja el recuadro que engloba toda la tabla
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(table.startX, table.startY, table.width, table.height, 3, 3);
+        
+        // 2. Dibuja la línea horizontal que separa Totales de Certificación (después de la fila de IVA)
+        const ySeparacionTotales = table.body.cells[3][0].y + table.body.cells[3][0].height;
+        doc.line(table.startX, ySeparacionTotales, table.finalX, ySeparacionTotales);
+
+        // 3. Dibuja la línea vertical que separa los datos de la columna del QR
+        const xSeparacionQR = table.columns[2].x; 
+        doc.line(xSeparacionQR, table.startY, xSeparacionQR, table.finalY);
     }
   });
 
