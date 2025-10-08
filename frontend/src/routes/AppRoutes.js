@@ -19,9 +19,12 @@ import Correcciones from '../views/modules/Correcciones'
 import ReporteCompras from '../views/modules/Reportes/ReporteCompras';
 
 import Documentos from '../views/modules/Documentos';
-import Papeleria from '../views/modules/Papeleria';
 import NuevoEnvio from '../views/modules/Envios';
 import SeguimientoEnvios from '../views/modules/SeguimientoEnvios';
+import SliderConfig from '../views/modules/SliderConfig';
+import { Estados as EstadosEnvio, TiposTarifas as TiposTarifasEnvio } from '../views/modules/EnviosCatalogos';
+import About from '../views/About';
+import Precios from '../views/Precios';
 
 import ProtectedRoute from '../components/ProtectedRoute';
 import LandingPage from "../views/LandingPage"; // Importar el componente LandingPage
@@ -45,10 +48,13 @@ const AppRoutes = () => {
     { path: '/prestamosclientes', component: <Prestamosclientes /> },
     { path: '/correcciones', component: <Correcciones /> },
     { path: '/reportes/compras', component: <ReporteCompras /> }, 
-   { path: '/envios', component: <NuevoEnvio /> },
+    { path: '/envios', component: <NuevoEnvio /> },
     { path: '/documentos', component: <Documentos /> }, // CRUD TipoDocumento
-    { path: '/papeleria', component: <Papeleria /> },   // Lista papelería por cliente
-        { path: '/seguimiento', component: <SeguimientoEnvios /> },
+    { path: '/enviosestados', component: <EstadosEnvio /> },
+    { path: '/enviostipos', component: <TiposTarifasEnvio /> },
+    { path: '/seguimiento', component: <SeguimientoEnvios /> },
+    { path: '/configurarslider', component: <SliderConfig /> },
+    { path: '/configurar/slider', component: <SliderConfig /> },
 
   ];
   return (
@@ -57,6 +63,8 @@ const AppRoutes = () => {
         {/* Ruta de Landing Page */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/precios" element={<Precios />} />
 
         {/* Rutas protegidas */}
         {protectedRoutes.map(({ path, component }, index) => (
@@ -82,6 +90,11 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
+
+
+
+
+
 
 
 

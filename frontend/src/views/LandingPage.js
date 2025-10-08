@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import {
   Box,
   Button,
@@ -14,6 +14,7 @@ import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import ShieldIcon from "@mui/icons-material/Shield";
 import NavigationBar from "../components/NavigationBar";
 import TrackingWidget from "../components/TrackingWidget";
+import SliderHero from "../components/SliderHero";
 
 const floatUp = keyframes`
   0% { transform: translateY(0px); }
@@ -95,7 +96,7 @@ const LandingPage = () => {
                   border: "1px solid rgba(255,255,255,0.06)",
                 }}
               >
-                {/* Animación visual del camión y paquetes */}
+                {/* AnimaciÃ³n visual del camiÃ³n y paquetes */}
                 <Box
                   sx={{
                     height: 240,
@@ -106,7 +107,7 @@ const LandingPage = () => {
                     overflow: "hidden",
                   }}
                 >
-                  {/* “Ruta” */}
+                  {/* â€œRutaâ€ */}
                   <Box
                     sx={{
                       position: "absolute",
@@ -119,7 +120,7 @@ const LandingPage = () => {
                     }}
                   />
 
-                  {/* Camión */}
+                  {/* CamiÃ³n */}
                   <Box
                     sx={{
                       position: "absolute",
@@ -144,7 +145,7 @@ const LandingPage = () => {
                       }}
                     >
                       <LocalShippingIcon sx={{ fontSize: 28, color: "#60a5fa" }} />
-                      <Typography sx={{ color: "#e5e7eb" }}>En tránsito</Typography>
+                      <Typography sx={{ color: "#e5e7eb" }}>En Tránsito</Typography>
                     </Box>
                   </Box>
 
@@ -207,14 +208,14 @@ const LandingPage = () => {
           </Grid>
         </Container>
       </Box>
-
+<SliderHero height={440} fit="contain" position="center" />
       {/* Features */}
       <Container sx={{ py: { xs: 8, md: 10 } }}>
         <Grid container spacing={4}>
           {[{
             icon: <RocketLaunchIcon sx={{ color: "#0ea5e9" }} />,
             title: "Velocidad",
-            desc: "Recolección y entrega optimizadas para tus tiempos.",
+            desc: "RecolecciÃ³n y entrega optimizadas para tus tiempos.",
           },{
             icon: <ShieldIcon sx={{ color: "#22c55e" }} />,
             title: "Seguridad",
@@ -249,11 +250,12 @@ const LandingPage = () => {
             textAlign: "center",
           }}
         >
+          
           <Typography variant="h5" fontWeight={700}>
             ¿Listo para enviar tu próximo paquete?
           </Typography>
           <Typography sx={{ mt: 1, opacity: 0.9 }}>
-            Atención al cliente 24/7 · {currentYear}
+            AtenciÃ³n al cliente 24/7 Â· {currentYear}
           </Typography>
           <Button
             variant="contained"
@@ -274,4 +276,3 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
-

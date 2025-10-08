@@ -1,0 +1,11 @@
+-- Slider de la landing: catálogo de imágenes
+CREATE TABLE IF NOT EXISTS slider_images (
+  id_slider INT AUTO_INCREMENT PRIMARY KEY,
+  titulo VARCHAR(120) NULL,
+  descripcion VARCHAR(255) NULL,
+  url VARCHAR(500) NOT NULL,
+  orden INT NOT NULL DEFAULT 1,
+  activo TINYINT(1) NOT NULL DEFAULT 1,
+  creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

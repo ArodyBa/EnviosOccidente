@@ -28,6 +28,20 @@ function NavigationBar() {
           {/* separador */}
           <Box sx={{ height: 30, width: 2, backgroundColor: "white" }} />
 
+          <Button component={Link} to="/precios" color="inherit" sx={{ textTransform: "none" }}>
+            Precios
+          </Button>
+
+          {/* separador */}
+          <Box sx={{ height: 30, width: 2, backgroundColor: "white" }} />
+
+          <Button component={Link} to="/about" color="inherit" sx={{ textTransform: "none" }}>
+            Acerca de Nosotros
+          </Button>
+
+          {/* separador */}
+          <Box sx={{ height: 30, width: 2, backgroundColor: "white" }} />
+
           <Button component={Link} to="/login" color="inherit" sx={{ textTransform: "none" }}>
             <LoginIcon />
           </Button>
@@ -38,4 +52,3 @@ function NavigationBar() {
 }
 
 export default NavigationBar;
-

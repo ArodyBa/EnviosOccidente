@@ -296,14 +296,117 @@ const agregarEstadoEnvio = async (req, res) => {
 module.exports = {
   getTiposEnvio,
   createTipoEnvio,
+  // updates tipos
+  async updateTipoEnvio(req, res) {
+    try {
+      const id = Number(req.params.id);
+      const { nombre, priced_by_weight, activo } = req.body || {};
+      if (!id) return res.status(400).json({ message: 'id inválido' });
+      await db.query(
+        `UPDATE envio_tipos SET 
+           nombre = COALESCE(?, nombre),
+           priced_by_weight = CASE WHEN ? IS NULL THEN priced_by_weight ELSE (?<>0) END,
+           activo = CASE WHEN ? IS NULL THEN activo ELSE (?<>0) END
+         WHERE id_tipo_envio=?`,
+        [nombre ?? null, priced_by_weight, priced_by_weight, activo, activo, id]
+      );
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('updateTipoEnvio:', e.message);
+      res.status(500).json({ message: 'Error al actualizar tipo' });
+    }
+  },
+  async deleteTipoEnvio(req, res) {
+    try {
+      const id = Number(req.params.id);
+      if (!id) return res.status(400).json({ message: 'id inválido' });
+      await db.query(`UPDATE envio_tipos SET activo=0 WHERE id_tipo_envio=?`, [id]);
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('deleteTipoEnvio:', e.message);
+      res.status(500).json({ message: 'Error al eliminar tipo' });
+    }
+  },
   getTarifasEnvio,
   createTarifaEnvio,
+  async updateTarifaEnvio(req, res) {
+    try {
+      const id = Number(req.params.id);
+      const { nombre, largo_cm, ancho_cm, alto_cm, peso_base_kg, precio_base, activo } = req.body || {};
+      if (!id) return res.status(400).json({ message: 'id inválido' });
+      await db.query(
+        `UPDATE envio_tarifas SET
+           nombre = COALESCE(?, nombre),
+           largo_cm = ?,
+           ancho_cm = ?,
+           alto_cm = ?,
+           peso_base_kg = ?,
+           precio_base = COALESCE(?, precio_base),
+           activo = CASE WHEN ? IS NULL THEN activo ELSE (?<>0) END
+         WHERE id_tarifa_envio = ?`,
+        [nombre ?? null,
+         largo_cm ?? null,
+         ancho_cm ?? null,
+         alto_cm ?? null,
+         peso_base_kg ?? null,
+         precio_base ?? null,
+         activo,
+         activo,
+         id]
+      );
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('updateTarifaEnvio:', e.message);
+      res.status(500).json({ message: 'Error al actualizar tarifa' });
+    }
+  },
+  async deleteTarifaEnvio(req, res) {
+    try {
+      const id = Number(req.params.id);
+      if (!id) return res.status(400).json({ message: 'id inválido' });
+      await db.query(`UPDATE envio_tarifas SET activo=0 WHERE id_tarifa_envio=?`, [id]);
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('deleteTarifaEnvio:', e.message);
+      res.status(500).json({ message: 'Error al eliminar tarifa' });
+    }
+  },
   crearEnvio,
   getEnvio,
   // tracking
   getTrackingByCode,
   getEstadosEnvio,
   createEstadoEnvio,
+  async updateEstadoEnvio(req, res) {
+    try {
+      const id = Number(req.params.id);
+      const { nombre, orden, activo } = req.body || {};
+      if (!id) return res.status(400).json({ message: 'id inválido' });
+      await db.query(
+        `UPDATE estados_envio SET
+           nombre = COALESCE(?, nombre),
+           orden = COALESCE(?, orden),
+           activo = CASE WHEN ? IS NULL THEN activo ELSE (?<>0) END
+         WHERE id_estado_envio = ?`,
+        [nombre ?? null, orden ?? null, activo, activo, id]
+      );
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('updateEstadoEnvio:', e.message);
+      res.status(500).json({ message: 'Error al actualizar estado' });
+    }
+  },
+  async deleteEstadoEnvio(req, res) {
+    try {
+      const id = Number(req.params.id);
+      if (!id) return res.status(400).json({ message: 'id inválido' });
+      await db.query(`UPDATE estados_envio SET activo=0 WHERE id_estado_envio=?`, [id]);
+      res.json({ ok: true });
+    } catch (e) {
+      console.error('deleteEstadoEnvio:', e.message);
+      res.status(500).json({ message: 'Error al eliminar estado' });
+    }
+  },
   buscarEnvios,
   agregarEstadoEnvio,
 };
