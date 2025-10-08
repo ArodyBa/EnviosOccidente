@@ -25,6 +25,7 @@ const facturacionRoutes = require('./routes/facturacionRoutes');
 const facturasRoutes = require('./routes/facturas');
 const tipoDocumentosRoutes = require('./routes/tipoDocumentos');
 const papeleria = require('./routes/papeleria');
+const enviosRoutes = require('./routes/envios');
 
 const app = express();
 
@@ -144,9 +145,21 @@ app.use('/facturacion', verifyJWT, facturacionRoutes);
 app.use('/facturas', verifyJWT, facturasRoutes);
 app.use('/tipo-documentos', verifyJWT, tipoDocumentosRoutes);
 app.use('/papeleria', verifyJWT, papeleria);
+app.use('/envios', verifyJWT, enviosRoutes);
 
+// Tracking público por código (para landing)
+app.get('/tracking/:code', async (req, res) => {
+  try {
+    const ctrl = require('./controllers/enviosController');
+    return ctrl.getTrackingByCode(req, res);
+  } catch (e) {
+    res.status(500).json({ message: 'Error interno' });
+  }
+});
 // ======== Arranque ========
 console.log(`Servidor ejecutÃ¡ndose en modo: ${config.NODE_ENV}`);
 app.listen(config.PORT, () => {
   console.log(`Servidor iniciado en http://localhost:${config.PORT}`);
 });
+
+

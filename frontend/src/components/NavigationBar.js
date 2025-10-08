@@ -5,11 +5,11 @@ import LoginIcon from "@mui/icons-material/Login";
 
 function NavigationBar() {
   return (
-    <AppBar position="static" sx={{ backgroundColor: "#333" }}>
+    <AppBar position="static" sx={{ backgroundColor: "#0f172a" }}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         {/* Nombre del sistema */}
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Armería 38 SuperEscobar
+          Envíos Occidente
         </Typography>
 
         {/* Navegación */}
@@ -21,8 +21,8 @@ function NavigationBar() {
           {/* separador */}
           <Box sx={{ height: 30, width: 2, backgroundColor: "white" }} />
 
-          <Button component={Link} to="/productos" color="inherit" sx={{ textTransform: "none" }}>
-            Productos
+          <Button component="a" href="#rastreo" color="inherit" sx={{ textTransform: "none" }}>
+            Rastrear envío
           </Button>
 
           {/* separador */}
@@ -38,3 +38,4 @@ function NavigationBar() {
 }
 
 export default NavigationBar;
+

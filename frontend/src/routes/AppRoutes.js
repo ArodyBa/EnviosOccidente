@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Login from '../views/auth/Login';
@@ -18,8 +18,10 @@ import Prestamosclientes from '../views/modules/PrestamosClientes';
 import Correcciones from '../views/modules/Correcciones'
 import ReporteCompras from '../views/modules/Reportes/ReporteCompras';
 
-import Documentos from '../views/modules/Documentos';   // ⬅️ NUEVO (Tipos de documento)
-import Papeleria from '../views/modules/Papeleria';     // ⬅️ NUEVO (Papelería por cliente)
+import Documentos from '../views/modules/Documentos';
+import Papeleria from '../views/modules/Papeleria';
+import NuevoEnvio from '../views/modules/Envios';
+import SeguimientoEnvios from '../views/modules/SeguimientoEnvios';
 
 import ProtectedRoute from '../components/ProtectedRoute';
 import LandingPage from "../views/LandingPage"; // Importar el componente LandingPage
@@ -27,7 +29,7 @@ import FloatingWhatsApp from "../components/FloatingWhatsAppButton";
 
 
 const AppRoutes = () => {
-  // Definimos las rutas protegidas en un array para evitar repetición
+  // Definimos las rutas protegidas en un array para evitar repeticiÃ³n
   const protectedRoutes = [
     { path: '/dashboard', component: <Dashboard /> },
     { path: '/clientes', component: <Clientes /> },
@@ -42,14 +44,13 @@ const AppRoutes = () => {
     { path: '/reportes', component: <Reportes /> },
     { path: '/prestamosclientes', component: <Prestamosclientes /> },
     { path: '/correcciones', component: <Correcciones /> },
-    { path: '/reportes/compras', component: <ReporteCompras /> },
-
-    // ⬇️ Nuevas rutas
+    { path: '/reportes/compras', component: <ReporteCompras /> }, 
+   { path: '/envios', component: <NuevoEnvio /> },
     { path: '/documentos', component: <Documentos /> }, // CRUD TipoDocumento
     { path: '/papeleria', component: <Papeleria /> },   // Lista papelería por cliente
+        { path: '/seguimiento', component: <SeguimientoEnvios /> },
 
   ];
-
   return (
     <Router>
       <Routes>
@@ -71,9 +72,9 @@ const AppRoutes = () => {
         ))}
 
         {/* (opcional) 404 simple */}
-        {/* <Route path="*" element={<div style={{padding:20}}>Página no encontrada</div>} /> */}
+        {/* <Route path="*" element={<div style={{padding:20}}>PÃ¡gina no encontrada</div>} /> */}
       </Routes>
-      {/* Botón flotante de WhatsApp */}
+      {/* BotÃ³n flotante de WhatsApp */}
       <FloatingWhatsApp />
 
     </Router>
@@ -81,3 +82,12 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
+
+
+
+
+
+
+
+
+
