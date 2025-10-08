@@ -1,3 +1,4 @@
+// server.js
 const config = require('./config/environment');
 const express = require('express');
 const cors = require('cors');
@@ -5,7 +6,11 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 
-// Rutas
+// ✅ NUEVO: auth
+const authRoutes = require('./routes/auth'); // <-- agrega este archivo de rutas
+const { verifyJWT } = require('./middlewares/auth.middleware'); // <-- tu middleware JWT
+
+// Rutas negocio
 const clientesRoutes = require('./routes/clientes');
 const presatmosRoutes = require('./routes/prestamos');
 const productosRoutes = require('./routes/productos');
@@ -26,10 +31,9 @@ const app = express();
 // Confía en el proxy (cPanel) para detectar https correctamente
 app.set('trust proxy', 1);
 
-// ======== HOTFIX CORS (siempre pone headers y responde preflight) ========
+// ======== HOTFIX CORS ========
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  // en prod permitimos *.gtpos.xyz; en dev, todo
   const allowAllDev = (config.NODE_ENV === 'development');
   const allowed = /^https?:\/\/([a-z0-9-]+\.)*gtpos\.xyz$/i.test(origin || '');
 
@@ -50,7 +54,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// (Opcional) si quieres mantener corsOptions además del hotfix:
+// (Opcional) corsOptions clásico
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
@@ -67,7 +71,7 @@ app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
-// Healthcheck (para saber si la app está viva detrás del proxy)
+// Healthcheck
 app.get('/health', (req, res) => {
   res.json({ ok: true, env: config.NODE_ENV, time: new Date().toISOString() });
 });
@@ -94,7 +98,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ======== Subida con URL ABSOLUTA ========
+// Subida con URL ABSOLUTA
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ ok: false, message: 'No file' });
 
@@ -114,21 +118,32 @@ app.post('/upload', upload.single('file'), (req, res) => {
   });
 });
 
-// ======== Rutas de negocio ========
-app.use('/clientes', clientesRoutes);
-app.use('/prestamos', presatmosRoutes);
-app.use('/productos', productosRoutes);
-app.use('/proveedores', proveedoresRoutes);
-app.use('/compras', comprasRoutes);
-app.use('/ventas', ventasRoutes);
-app.use('/categorias', categoriasRoutes);
-app.use('/abonos', abonosRoutes);
-app.use('/reportes', reportes);
-app.use('/correcciones', correcciones);
-app.use('/facturacion', facturacionRoutes);
-app.use('/facturas', facturasRoutes);
-app.use('/tipo-documentos', tipoDocumentosRoutes);
-app.use('/papeleria', papeleria);
+// =================== 🔐 AUTH ===================
+// Público:
+app.use('/auth', authRoutes);
+
+// =================== 🔒 RUTAS PROTEGIDAS ===================
+// Si quieres proteger TODAS las rutas de negocio con JWT, descomenta este bloque:
+// app.use(verifyJWT);
+
+// O, si prefieres proteger por recurso, aplica verifyJWT en cada una según tu necesidad:
+
+app.use('/clientes', verifyJWT, clientesRoutes);
+app.use('/prestamos', verifyJWT, presatmosRoutes);
+app.use('/productos', verifyJWT, productosRoutes);
+app.use('/proveedores', verifyJWT, proveedoresRoutes);
+app.use('/compras', verifyJWT, comprasRoutes);
+app.use('/ventas', verifyJWT, ventasRoutes);
+app.use('/categorias', verifyJWT, categoriasRoutes);
+app.use('/abonos', verifyJWT, abonosRoutes);
+app.use('/reportes', verifyJWT, reportes);
+app.use('/correcciones', verifyJWT, correcciones);
+
+// facturación podría tener endpoints públicos/privados, ajusta a tu flujo:
+app.use('/facturacion', verifyJWT, facturacionRoutes);
+app.use('/facturas', verifyJWT, facturasRoutes);
+app.use('/tipo-documentos', verifyJWT, tipoDocumentosRoutes);
+app.use('/papeleria', verifyJWT, papeleria);
 
 // ======== Arranque ========
 console.log(`Servidor ejecutándose en modo: ${config.NODE_ENV}`);

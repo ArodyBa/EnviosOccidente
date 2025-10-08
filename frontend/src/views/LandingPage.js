@@ -14,7 +14,7 @@ const LandingPage = () => {
           {/* Sección Promocional */}
           <Grid item xs={12} md={6}>
             <Typography variant="h3" gutterBottom>
-              ¡Bienvenido a Armerías Agop!
+              ¡Bienvenido a Armerías 38Super Escobar!
             </Typography>
             <Typography variant="h6" gutterBottom>
               Descubre nuestras ofertas exclusivas en armas, municiones y accesorios.

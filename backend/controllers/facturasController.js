@@ -1,10 +1,10 @@
-const { promisePool } = require("../config/db");
+const db = require('../config/db'); // 👈 pool con promesas
 
 // Obtener todas las facturas
 const getFacturas = async (req, res) => {
   try {
-    const [result] = await promisePool.query("SELECT * FROM documentos_fel ORDER BY fecha_emision DESC");
-    const [result2] = await promisePool.query("SELECT * FROM detalle_ventas WHERE id_venta = 148");
+    const [result] = await db.query("SELECT * FROM documentos_fel ORDER BY fecha_emision DESC");
+    const [result2] = await db.query("SELECT * FROM detalle_ventas WHERE id_venta = 148");
     console.log(result2);
     res.json(result);
   } catch (error) {

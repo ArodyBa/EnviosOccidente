@@ -1,9 +1,9 @@
-const { pool, promisePool } = require("../config/db");
+const db = require('../config/db'); // <- promisePool
 
 // Obtener todas las categorías
 const getCategorias = async (req, res) => {
   try {
-    const [result] = await promisePool.query("SELECT id_categoria, nombre FROM categorias");
+    const [result] = await db.query("SELECT id_categoria, nombre FROM categorias");
     res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener categorías", error });
@@ -13,7 +13,7 @@ const getCategorias = async (req, res) => {
 // Obtener todos los productos
 const getProductos = async (req, res) => {
   try {
-    const [result] = await promisePool.query(`
+    const [result] = await db.query(`
       SELECT 
         p.id_producto AS id,
         p.codigo,
@@ -50,7 +50,7 @@ const crearProducto = async (req, res) => {
   } = req.body;
 console.log("AQUI")
   try {
-    const [result] = await promisePool.query(
+    const [result] = await db.query(
       `INSERT INTO productos 
         (Codigo, descripcion, id_categoria, precio_compra, precio_venta, fecha_vencimiento, cantidad_inicial, nivel_minimo)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,

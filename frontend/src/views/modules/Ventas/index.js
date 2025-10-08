@@ -125,10 +125,10 @@ const generarPDFVenta = (res, logoImgEl) => {
   doc.text("COMPROBANTE", 105, 30, { align: "center" });
 
   doc.setFontSize(12);
-  doc.text("Armerías AGOP", 15, 40);
-  doc.text("Dirección: 2da. Avenida, Zona 1, Malacatán, San Marcos", 15, 46);
-  doc.text("Tel: 7937-4297", 15, 52);
-  doc.text("Confianza y Seguridad en un mismo lugar", 15, 58);
+  doc.text("Armerías 38Super Escobar", 15, 40);
+  doc.text("Dirección: , Malacatán, San Marcos", 15, 46);
+  doc.text("Tel: xxxxx", 15, 52);
+  doc.text("Slogan", 15, 58);
 
   doc.text(`Cliente: ${cliente?.nombre || "CF"}`, 140, 40);
   doc.text(`NIT: ${cliente?.nit || "CF"}`, 140, 46);
@@ -177,13 +177,13 @@ const generarPDFFactura = async (res, resFactura, logoImgEl) => {
 
   doc.setFontSize(14);
   doc.setFont(undefined, 'bold');
-  doc.text("Armerías AGOP", 105, 20, { align: "center" });
+  doc.text("Armerías 38Super Escobar", 105, 20, { align: "center" });
 
   doc.setFontSize(9);
   doc.setFont(undefined, 'normal');
-  doc.text("Dirección: 2da. Avenida, Zona 1, Malacatán, San Marcos", 105, 26, { align: "center" });
-  doc.text("Tel: 7937-4297", 105, 31, { align: "center" });
-  doc.text("Confianza y Seguridad en un mismo lugar", 105, 36, { align: "center" });
+  doc.text(", Malacatán, San Marcos", 105, 26, { align: "center" });
+  doc.text("Tel: xxxx", 105, 31, { align: "center" });
+  doc.text("Slogan", 105, 36, { align: "center" });
 
   // ----------------------------------------------------------------------
   // ✅ SECCIÓN 1: DOCUMENTO Y FECHA (AJUSTE DE POSICIÓN Y ANCHO)

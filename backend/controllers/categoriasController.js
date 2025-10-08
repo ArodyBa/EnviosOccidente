@@ -1,9 +1,9 @@
-const { promisePool } = require("../config/db");
+const db = require('../config/db'); // ✅
 
 // Obtener todas las categorías
 const getCategorias = async (req, res) => {
   try {
-    const [result] = await promisePool.query("SELECT * FROM categorias");
+    const [result] = await db.query("SELECT * FROM categorias");
     res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener categorías", error });
@@ -14,7 +14,7 @@ const getCategorias = async (req, res) => {
 const insertarCategoria = async (req, res) => {
   const { nombre, descripcion } = req.body;
   try {
-    await promisePool.query(
+    await db.query(
       "INSERT INTO categorias (nombre, descripcion) VALUES (?, ?)",
       [nombre, descripcion]
     );
@@ -29,7 +29,7 @@ const actualizarCategoria = async (req, res) => {
   const { id } = req.params;
   const { nombre, descripcion } = req.body;
   try {
-    await promisePool.query(
+    await db.query(
       "UPDATE categorias SET nombre = ?, descripcion = ? WHERE id_categoria = ?",
       [nombre, descripcion, id]
     );
@@ -43,7 +43,7 @@ const actualizarCategoria = async (req, res) => {
 const eliminarCategoria = async (req, res) => {
   const { id } = req.params;
   try {
-    await promisePool.query("DELETE FROM categorias WHERE id_categoria = ?", [id]);
+    await db.query("DELETE FROM categorias WHERE id_categoria = ?", [id]);
     res.json({ message: "Categoría eliminada correctamente" });
   } catch (error) {
     res.status(500).json({ message: "Error al eliminar categoría", error });

@@ -1,9 +1,10 @@
-const { promisePool } = require("../config/db");
+const db = require('../config/db'); // 👈 pool con promesas
+
 
 // Obtener todos los clientes
 const getClientes = async (req, res) => {
   try {
-    const [clientes] = await promisePool.query("SELECT * FROM clientes");
+    const [clientes] = await db.query("SELECT * FROM clientes");
     res.json(clientes);
   } catch (error) {
     console.error("Error al obtener los clientes:", error.message, error.stack);
@@ -27,7 +28,7 @@ const crearCliente = async (req, res) => {
     tiene_credito = 0
   } = req.body;
 
-  const conn = await promisePool.getConnection();
+  const conn = await db.getConnection();
 
   try {
     await conn.beginTransaction();
@@ -92,7 +93,7 @@ const actualizarCliente = async (req, res) => {
   } = req.body;
 
   try {
-    const [result] = await promisePool.query(
+    const [result] = await db.query(
       `UPDATE clientes SET 
         nombre = ?, nit = ?, dpi = ?, direccion = ?, telefono = ?, 
         correo = ?, codigo_postal = ?, municipio = ?, 
@@ -120,7 +121,7 @@ const actualizarCliente = async (req, res) => {
 const eliminarCliente = async (req, res) => {
   const { id } = req.params;
   try {
-    const [result] = await promisePool.query(
+    const [result] = await db.query(
       "DELETE FROM clientes WHERE id_cliente = ?",
       [id]
     );
@@ -138,7 +139,7 @@ const eliminarCliente = async (req, res) => {
 const buscarClientePorDPI = async (req, res) => {
   const { dpi } = req.params;
   try {
-    const [result] = await promisePool.query(
+    const [result] = await db.query(
       "SELECT * FROM clientes WHERE dpi = ?",
       [dpi]
     );

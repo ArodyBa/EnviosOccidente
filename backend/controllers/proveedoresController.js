@@ -1,9 +1,9 @@
-const { promisePool } = require("../config/db");
+const db = require('../config/db'); // 👈 pool con promesas
 
 // Obtener todos los proveedores
 const getProveedores = async (req, res) => {
   try {
-    const [result] = await promisePool.query("SELECT * FROM proveedores");
+    const [result] = await db.query("SELECT * FROM proveedores");
     res.json(result);
   } catch (error) {
     console.error("Error al obtener proveedores:", error.message, error.stack);
@@ -15,7 +15,7 @@ const getProveedores = async (req, res) => {
 const crearProveedor = async (req, res) => {
   const { nombre, nit, dpi, direccion, telefono } = req.body;
   try {
-    const [result] = await promisePool.query(
+    const [result] = await db.query(
       "INSERT INTO proveedores (nombre, nit, dpi, direccion, telefono) VALUES (?, ?, ?, ?, ?)",
       [nombre, nit, dpi, direccion, telefono]
     );
@@ -32,7 +32,7 @@ const actualizarProveedor = async (req, res) => {
   const { id } = req.params;
   const { nombre, nit, dpi, direccion, telefono } = req.body;
   try {
-    const [result] = await promisePool.query(
+    const [result] = await db.query(
       "UPDATE proveedores SET nombre = ?, nit = ?, dpi = ?, direccion = ?, telefono = ? WHERE id = ?",
       [nombre, nit, dpi, direccion, telefono, id]
     );
@@ -50,7 +50,7 @@ const actualizarProveedor = async (req, res) => {
 const eliminarProveedor = async (req, res) => {
   const { id } = req.params;
   try {
-    const [result] = await promisePool.query("DELETE FROM proveedores WHERE id = ?", [id]);
+    const [result] = await db.query("DELETE FROM proveedores WHERE id = ?", [id]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Proveedor no encontrado" });
     }

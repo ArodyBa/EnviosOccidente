@@ -19,8 +19,8 @@ const generarPDFAbono = (cliente, abono, saldoRestante) => {
     doc.text("RECIBO DE ABONO", 105, 30, { align: "center" });
 
     doc.setFontSize(12);
-    doc.text("Armerías AGOP", 15, 40);
-    doc.text("Dirección: 2da. Avenida, Zona 1, Malacatán, San Marcos", 15, 46);
+    doc.text("Armerías Super38 Escobar", 15, 40);
+    doc.text(" Malacatán, San Marcos", 15, 46);
     doc.text("Tel: 7937-4297", 15, 52);
     doc.text("Confianza y Seguridad en un mismo lugar", 15, 58);
 

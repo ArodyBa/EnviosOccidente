@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs/promises');
-const { promisePool } = require('../config/db');
+const  db  = require('../config/db');
 
 exports.upsert = async (req, res) => {
   const { id_cliente, id_tipo_doc, nombre_documento, fecha_vencimiento, fecha_carga, archivo } = req.body;
@@ -9,7 +9,7 @@ exports.upsert = async (req, res) => {
     return res.status(400).json({ message: 'id_cliente e id_tipo_doc son obligatorios' });
   }
 
-  const conn = await promisePool.getConnection();
+  const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
@@ -107,7 +107,7 @@ exports.upsert = async (req, res) => {
 exports.listByCliente = async (req, res) => {
   const id_cliente = Number(req.params.id_cliente);
   try {
-    const [rows] = await promisePool.query(
+    const [rows] = await db.query(
       `SELECT p.id_papeleria, p.id_tipo_doc, td.nombre AS tipo_documento,
               p.nombre_documento, p.documento_url, p.storage_path,
               p.fecha_vencimiento, p.fecha_carga, p.estado
@@ -127,7 +127,7 @@ exports.listByCliente = async (req, res) => {
 exports.deleteItem = async (req, res) => {
   const id_papeleria = Number(req.params.id_papeleria);
   try {
-    const [[row]] = await promisePool.query(
+    const [[row]] = await db.query(
       `SELECT storage_path FROM papeleria WHERE id_papeleria=?`,
       [id_papeleria]
     );
@@ -140,7 +140,7 @@ exports.deleteItem = async (req, res) => {
       try { await fs.unlink(abs); } catch (_) {}
     }
 
-    await promisePool.query(
+    await db.query(
       `UPDATE papeleria
           SET documento_url=NULL, storage_path=NULL, estado=0, updated_at=NOW()
         WHERE id_papeleria=?`,

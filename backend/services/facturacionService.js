@@ -2,7 +2,7 @@
  * felService.js
  * Servicio para gestionar la Factura Electrónica en Línea (FEL) de Guatemala
  */
-const { promisePool } = require("../config/db");
+const db  = require("../config/db");
 const xml2js = require('xml2js');
 const axios = require('axios');
 const fs = require('fs');
@@ -397,7 +397,7 @@ class facturacionService {
     } = resultado;
 
     try {
-      const [result] = await promisePool.query(
+      const [result] = await db.query(
         `INSERT INTO documentos_fel (
           id_venta, uuid, serie, numero_documento, fecha_certificacion, fecha_emision, 
           estado, xml_enviado, xml_certificado, pdf_base64, nit_cliente
@@ -780,7 +780,7 @@ class facturacionService {
     } = resultado;
 
     try {
-      const [result] = await promisePool.query(
+      const [result] = await db.query(
         `UPDATE documentos_fel SET estado = ?, pdf_base64 = ?, fecha_anulacion = ?, descripcion_anulacion = ? WHERE uuid = ? AND id_venta = ?`,
         [estado, pdf_base64, fecha_certificacion, descripcion_anulacion, uuid, id_venta]
       );

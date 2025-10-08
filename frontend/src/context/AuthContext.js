@@ -1,51 +1,65 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+// src/context/AuthContext.jsx
+import React, { createContext, useContext, useEffect, useState } from "react";
+import proyecto, { setAuthHeader } from "../services/api/Proyecto"; // axios + helper
 
-// Crear el contexto
-export const AuthContext = createContext();
+export const AuthContext = createContext(null);
 
-// Proveedor del contexto
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export function AuthProvider({ children }) {
+  const [accessToken, setAccessToken] = useState(() => localStorage.getItem("accessToken"));
+  const [user, setUser] = useState(null);   // { id, usuario, correo }
+  const [roles, setRoles] = useState([]);
+  const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Función para iniciar sesión
-  const login = (pin) => {
-    const validPin = 'AGOP@GT'; // Cambia esto al PIN válido
-    if (pin.trim() === validPin) { // Asegúrate de que el PIN sea exacto
-      const userData = { pin, isAuthenticated: true };
-      setUser(userData);
-      localStorage.setItem('auth', JSON.stringify(userData));
-      return true;
-    }
-    return false;
+  // Login: guarda tokens + perfil + roles + menús, y setea Authorization
+  const login = async (usuario, password) => {
+    const { data } = await proyecto.post("/auth/login", { usuario, password });
+    localStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("refreshToken", data.refreshToken);
+    setAuthHeader(data.accessToken);          // Bearer en axios
+    setAccessToken(data.accessToken);         // estado del contexto
+    setUser(data.perfil || null);
+    setRoles(data.roles || []);
+setMenus(data?.menus || []);   // 👈 importante
+
+    return true;
   };
 
-  // Función para cerrar sesión
   const logout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    setAuthHeader(null);                      // limpia Authorization
+    setAccessToken(null);
     setUser(null);
-    localStorage.removeItem('auth');
+    setRoles([]);
+    setMenus([]);
   };
 
-  // Cargar datos del usuario al iniciar
+  // Carga inicial: si hay token, setea header y valida /auth/me
   useEffect(() => {
-    const storedUser = localStorage.getItem('auth');
-    console.log('Usuario en localStorage:', storedUser); // Verifica qué se guarda
-  
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    (async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          setAuthHeader(token);
+          setAccessToken(token);
+          const { data } = await proyecto.get("/auth/me");
+          setUser(data?.perfil || null);
+          setRoles(data?.roles || []);
+                setMenus(data?.menus || []); // 👈 importante
+
+          // menús suelen venir en /auth/login; si necesitas, podrías recargarlos aquí
+        }
+      } catch {
+        logout();
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
-  
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  const value = { accessToken, user, roles, menus, loading, login, logout };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
-// Hook para usar el contexto de autenticación
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);

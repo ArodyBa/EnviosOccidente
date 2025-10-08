@@ -1,9 +1,10 @@
+// config/db.js
 const mysql = require('mysql2');
 const config = require('./environment');
 
-// Crear el pool
 const pool = mysql.createPool({
   host: config.DB_HOST,
+  port: config.DB_PORT || 3306,
   user: config.DB_USER,
   password: config.DB_PASSWORD,
   database: config.DB_NAME,
@@ -12,20 +13,12 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Pool con promesas
 const promisePool = pool.promise();
 
-// Probar conexión
+// (opcional) probar conexión una sola vez
 promisePool.getConnection()
-  .then(conn => {
-    console.log("✅ Conexión establecida con la base de datos MySQL en Hostinger");
-    conn.release();
-  })
-  .catch(err => {
-    console.error("❌ Error al conectar a la base de datos:", err.message);
-  });
+  .then(conn => { console.log('✅ DB OK'); conn.release(); })
+  .catch(err => console.error('❌ DB ERROR:', err.message));
 
-module.exports = {
-  pool,
-  promisePool,
-};
+// 👇 OJO: exporta SOLO el pool con promesas
+module.exports = promisePool;

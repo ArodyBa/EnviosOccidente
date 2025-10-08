@@ -1,16 +1,21 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+// src/routes/ProtectedRoute.jsx
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+export default function ProtectedRoute({ children, rolesAllowed }) {
+  const { accessToken, roles, loading } = useAuth();
+  const location = useLocation();
 
-  console.log('Estado de loading:', loading); // Verifica si el estado cambia correctamente
-  console.log('Usuario:', user); // Verifica el estado de user
+  if (loading) return null;                       // o spinner
 
-  if (loading) return <p>Cargando...</p>;
+  if (!accessToken) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
-  return user?.isAuthenticated ? children : <Navigate to="/" />;
-};
+  if (rolesAllowed?.length) {
+    const ok = roles?.some(r => rolesAllowed.includes(r));
+    if (!ok) return <Navigate to="/no-autorizado" replace />;
+  }
 
-export default ProtectedRoute;
+  return children;
+}
