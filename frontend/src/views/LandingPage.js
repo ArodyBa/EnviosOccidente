@@ -215,7 +215,7 @@ const LandingPage = () => {
           {[{
             icon: <RocketLaunchIcon sx={{ color: "#0ea5e9" }} />,
             title: "Velocidad",
-            desc: "RecolecciÃ³n y entrega optimizadas para tus tiempos.",
+            desc: "Recolección y entrega optimizadas para tus tiempos.",
           },{
             icon: <ShieldIcon sx={{ color: "#22c55e" }} />,
             title: "Seguridad",
@@ -255,7 +255,7 @@ const LandingPage = () => {
             ¿Listo para enviar tu próximo paquete?
           </Typography>
           <Typography sx={{ mt: 1, opacity: 0.9 }}>
-            AtenciÃ³n al cliente 24/7 Â· {currentYear}
+            Atención al cliente 24/7 Año {currentYear}
           </Typography>
           <Button
             variant="contained"

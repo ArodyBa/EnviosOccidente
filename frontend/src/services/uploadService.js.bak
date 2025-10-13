@@ -1,6 +1,6 @@
 // src/services/uploadService.js
-const UPLOAD_URL = process.env.REACT_APP_UPLOAD_URL;        // ej: https://api.tu-dominio.com/upload o https://tu-dominio.com/api/upload
-const API_BASE   = process.env.REACT_APP_API_URL;           // ej: https://api.tu-dominio.com o https://tu-dominio.com/api
+const UPLOAD_URL = process.env.REACT_APP_UPLOAD_URL;        // ej: http://localhost:5001/upload
+const API_BASE   = process.env.REACT_APP_API_URL;           // ej: http://localhost:5001
 const TOKEN      = process.env.REACT_APP_UPLOAD_TOKEN || ""; // opcional
 
 /**
@@ -42,17 +42,11 @@ export async function subirArchivo(file, opts = {}) {
     throw new Error(data.message || "Error al subir archivo");
   }
 
-  // Preferir relative_path para construir URL con API_BASE (evita problemas de prefijos /api)
-  let finalUrl = null;
-  if (data.relative_path && API_BASE) {
-    const cleanRel = data.relative_path.startsWith('/') ? data.relative_path : `/${data.relative_path}`;
-    finalUrl = `${API_BASE}${cleanRel}`;
-  } else {
-    finalUrl = data.url;
-    if (finalUrl && API_BASE && !/^https?:\/\//i.test(finalUrl)) {
-      const clean = finalUrl.startsWith('/') ? finalUrl : `/${finalUrl}`;
-      finalUrl = `${API_BASE}${clean}`;
-    }
+  // si el backend devuelve url relativa, compón absoluta con API_BASE
+  let finalUrl = data.url;
+  if (finalUrl && !/^https?:\/\//i.test(finalUrl)) {
+    const clean = finalUrl.startsWith("/") ? finalUrl : `/${finalUrl}`;
+    finalUrl = `${API_BASE}${clean}`;
   }
 
   return {
@@ -63,4 +57,3 @@ export async function subirArchivo(file, opts = {}) {
     size_bytes: data.size_bytes ?? file.size,
   };
 }
-

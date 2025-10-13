@@ -105,6 +105,22 @@ app.post('/upload', upload.single('file'), (req, res) => {
 // ===== AUTH =====
 app.use('/auth', authRoutes);
 
+// Endpoints públicos para Precios (solo lectura)
+app.get('/envios/tipos', async (req, res) => {
+  try {
+    const ctrl = require('./controllers/enviosController');
+    return ctrl.getTiposEnvio(req, res);
+  } catch (e) { res.status(500).json({ message: 'Error interno' }); }
+});
+app.get('/envios/tarifas', async (req, res) => {
+  try {
+    const ctrl = require('./controllers/enviosController');
+    return ctrl.getTarifasEnvio(req, res);
+  } catch (e) { res.status(500).json({ message: 'Error interno' }); }
+});
+
+// Endpoints públicos (definir antes de rutas protegidas)
+
 // ===== RUTAS PROTEGIDAS =====
 app.use('/clientes', verifyJWT, clientesRoutes);
 app.use('/prestamos', verifyJWT, presatmosRoutes);
@@ -124,18 +140,6 @@ app.use('/envios', verifyJWT, enviosRoutes);
 app.use('/slider', verifyJWT, sliderRoutes);
 
 // Público: tracking + slider
-app.get('/tracking/:code', async (req, res) => {
-  try {
-    const ctrl = require('./controllers/enviosController');
-    return ctrl.getTrackingByCode(req, res);
-  } catch (e) { res.status(500).json({ message: 'Error interno' }); }
-});
-app.get('/slider', async (req, res) => {
-  try {
-    const ctrl = require('./controllers/sliderController');
-    return ctrl.listPublic(req, res);
-  } catch (e) { res.status(500).json({ message: 'Error interno' }); }
-});
 
 // ===== Arranque =====
 console.log(`Servidor ejecutándose en modo: ${config.NODE_ENV}`);

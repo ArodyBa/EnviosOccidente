@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Container, Grid, Paper, Switch, TextField, Typography } from '@mui/material';
 import proyecto from '../../../services/api/Proyecto';
+import { subirArchivo } from '../../../services/uploadService';
 
 const SliderConfig = () => {
   const [rows, setRows] = useState([]);
@@ -13,12 +14,12 @@ const SliderConfig = () => {
 
   const onUpload = async () => {
     if (!nuevo.file) return;
-    const form = new FormData();
-    form.append('file', nuevo.file);
-    const up = await fetch((proyecto.defaults.baseURL || '') + '/upload', { method:'POST', body: form });
-    const data = await up.json();
-    if (!data?.ok) return alert('Error al subir');
-    setNuevo(s => ({ ...s, url: data.url }));
+    try {
+      const data = await subirArchivo(nuevo.file, { subdir: 'slider' });
+      setNuevo(s => ({ ...s, url: data.url }));
+    } catch (e) {
+      alert(e.message || 'Error al subir');
+    }
   };
 
   const add = async () => {
@@ -68,4 +69,3 @@ const SliderConfig = () => {
 };
 
 export default SliderConfig;
-
