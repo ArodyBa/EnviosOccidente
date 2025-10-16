@@ -1,4 +1,4 @@
-ï»¿// server.js
+// server.js
 const config = require('./config/environment');
 const express = require('express');
 const cors = require('cors');
@@ -105,7 +105,19 @@ app.post('/upload', upload.single('file'), (req, res) => {
 // ===== AUTH =====
 app.use('/auth', authRoutes);
 
-// Endpoints pÃºblicos para Precios (solo lectura)
+// Endpoints publicos (definir antes de rutas protegidas)
+app.get('/slider', async (req, res) => {
+  try {
+    const ctrl = require('./controllers/sliderController');
+    return ctrl.listPublic(req, res);
+  } catch (e) { res.status(500).json({ message: 'Error interno' }); }
+});
+app.get('/tracking/:code', async (req, res) => {
+  try {
+    const ctrl = require('./controllers/enviosController');
+    return ctrl.getTrackingByCode(req, res);
+  } catch (e) { res.status(500).json({ message: 'Error interno' }); }
+});// Endpoints públicos para Precios (solo lectura)
 app.get('/envios/tipos', async (req, res) => {
   try {
     const ctrl = require('./controllers/enviosController');
@@ -119,7 +131,7 @@ app.get('/envios/tarifas', async (req, res) => {
   } catch (e) { res.status(500).json({ message: 'Error interno' }); }
 });
 
-// Endpoints pÃºblicos (definir antes de rutas protegidas)
+// Endpoints públicos (definir antes de rutas protegidas)
 
 // ===== RUTAS PROTEGIDAS =====
 app.use('/clientes', verifyJWT, clientesRoutes);
@@ -139,10 +151,10 @@ app.use('/papeleria', verifyJWT, papeleriaRoutes);
 app.use('/envios', verifyJWT, enviosRoutes);
 app.use('/slider', verifyJWT, sliderRoutes);
 
-// PÃºblico: tracking + slider
+// Público: tracking + slider
 
 // ===== Arranque =====
-console.log(`Servidor ejecutÃ¡ndose en modo: ${config.NODE_ENV}`);
+console.log(`Servidor ejecutándose en modo: ${config.NODE_ENV}`);
 app.listen(config.PORT, () => {
   console.log(`Servidor iniciado en http://localhost:${config.PORT}`);
 });
