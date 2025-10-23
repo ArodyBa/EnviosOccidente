@@ -72,11 +72,36 @@ const createTarifaEnvio = async (req, res) => {
 // POST /envios  { fecha, id_cliente, observaciones?, detalles: [ { cantidad, id_tipo_envio, id_tarifa_envio?, precio_unitario?, peso_kg? , descripcion? } ] }
 const crearEnvio = async (req, res) => {
   const { fecha, id_cliente, observaciones, detalles, tracking_code } = req.body;
+  // pago_efectivo opcional (default true): si viene true, registra movimiento en caja
+  const pagoEfectivo = (() => {
+    const v = req.body?.pago_efectivo;
+    if (v === undefined || v === null) return true;
+    if (typeof v === 'boolean') return v;
+    const s = String(v).toLowerCase();
+    return ['1','true','t','si','sí','yes','y'].includes(s);
+  })();
   if (!fecha || !id_cliente || !Array.isArray(detalles) || detalles.length === 0) {
     return res.status(400).json({ message: 'fecha, id_cliente y al menos un detalle son requeridos' });
   }
   const code = String(tracking_code || '').trim();
   if (!code) return res.status(400).json({ message: 'tracking_code es requerido' });
+  // Si el pago es en efectivo, exigir que exista una caja abierta antes de crear el envío
+  try {
+    if (pagoEfectivo) {
+      const [[ap]] = await db.query(
+        `SELECT id FROM caja_aperturas WHERE id_caja=1 AND estado='ABIERTA' LIMIT 1`
+      );
+      if (!ap) {
+        return res.status(409).json({
+          message: 'No hay una caja ABIERTA. Debe aperturar caja antes de registrar envíos pagados en efectivo.'
+        });
+      }
+    }
+  } catch (e) {
+    console.error('validación caja abierta (envíos):', e.message);
+    return res.status(500).json({ message: 'Error validando caja abierta' });
+  }
+
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -130,6 +155,29 @@ const crearEnvio = async (req, res) => {
 
     await conn.query(`UPDATE envios SET total=? WHERE id_envio=?`, [+(total.toFixed(2)), id_envio]);
 
+    // Registrar ingreso en caja si corresponde (caja abierta, efectivo)
+    try {
+      if (pagoEfectivo) {
+        const [[ap]] = await conn.query(
+          `SELECT id FROM caja_aperturas WHERE id_caja=1 AND estado='ABIERTA' LIMIT 1`
+        );
+        if (ap) {
+          const userId = req.user?.sub || null;
+          await conn.query(
+            `INSERT INTO caja_movimientos (id_apertura, tipo, monto, descripcion, origen, referencia_id, id_usuario, es_efectivo)
+             VALUES (?, 'INGRESO', ?, ?, 'ENVIO', ?, ?, 1)`,
+            [ap.id, +(total.toFixed(2)), `Envio ID ${id_envio} (${code})`, id_envio, userId]
+          );
+        } else {
+          // Sin caja abierta, no forzamos error para no perder el envio; solo avisamos en logs
+          console.warn('crearEnvio: no hay caja abierta, no se registró movimiento de caja');
+        }
+      }
+    } catch (cx) {
+      console.error('crearEnvio caja_movimientos error:', cx.message);
+      // No hacemos rollback por esto para no perder el envío; si prefieres estrictamente forzar caja abierta, aquí podrías lanzar error
+    }
+
     // Estado inicial
     const estadoInicial = await getDefaultEstadoId(conn);
     if (estadoInicial) {
@@ -138,7 +186,7 @@ const crearEnvio = async (req, res) => {
     }
 
     await conn.commit();
-    res.status(201).json({ id_envio, tracking_code: code, total: +total.toFixed(2) });
+    res.status(201).json({ id_envio, tracking_code: code, total: +total.toFixed(2), caja_registrada: !!pagoEfectivo });
   } catch (e) {
     await conn.rollback();
     console.error('crearEnvio:', e.message);

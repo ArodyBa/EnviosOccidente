@@ -25,6 +25,7 @@ import SliderConfig from '../views/modules/SliderConfig';
 import { Estados as EstadosEnvio, TiposTarifas as TiposTarifasEnvio } from '../views/modules/EnviosCatalogos';
 import About from '../views/About';
 import Precios from '../views/Precios';
+import Caja from '../views/modules/Caja';
 
 import ProtectedRoute from '../components/ProtectedRoute';
 import LandingPage from "../views/LandingPage"; // Importar el componente LandingPage
@@ -55,6 +56,7 @@ const AppRoutes = () => {
     { path: '/seguimiento', component: <SeguimientoEnvios /> },
     { path: '/configurarslider', component: <SliderConfig /> },
     { path: '/configurar/slider', component: <SliderConfig /> },
+    { path: '/caja', component: <Caja /> },
 
   ];
   return (

@@ -97,6 +97,7 @@ const NuevoEnvio = () => {
   const [detalle, setDetalle] = useState([ { cantidad: 1, id_tipo_envio: '', id_tarifa_envio: '', precio_unitario: 0, peso_kg: null } ]);
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
+  const [pagoEfectivo, setPagoEfectivo] = useState(true);
 
   useEffect(() => {
     // cargar catálogos
@@ -141,6 +142,7 @@ const NuevoEnvio = () => {
         id_cliente: Number(idCliente),
         observaciones: obs || null,
         tracking_code: tracking.trim(),
+        pago_efectivo: pagoEfectivo,
         detalles: detalle.map(d => ({
           cantidad: Number(d.cantidad),
           id_tipo_envio: Number(d.id_tipo_envio),
@@ -208,6 +210,12 @@ const NuevoEnvio = () => {
               helperText={!tracking.trim() ? 'Requerido' : ' '}
               error={!tracking.trim()}
             />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', gap: 1 }}>
+              <input id="pago-efectivo" type="checkbox" checked={pagoEfectivo} onChange={e => setPagoEfectivo(e.target.checked)} />
+              <label htmlFor="pago-efectivo">Pago en efectivo</label>
+            </Box>
           </Grid>
         </Grid>
       </Paper>
