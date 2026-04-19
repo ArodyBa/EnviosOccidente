@@ -6,6 +6,7 @@ import {
 import DataTable from "react-data-table-component";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { dataTableStylesDark } from "../../../styles/dataTableStyles";
 import {
   getCategorias, insertarCategoria,
   actualizarCategoria, eliminarCategoria
@@ -81,6 +82,7 @@ const Categorias = () => {
         data={categorias}
         pagination
         highlightOnHover
+        customStyles={dataTableStylesDark}
       />
 
       <Dialog open={open} onClose={handleClose}>

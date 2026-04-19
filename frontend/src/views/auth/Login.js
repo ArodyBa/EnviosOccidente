@@ -1,12 +1,19 @@
 import React, { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
-  Box, Button, TextField, Typography, Container, Paper,
-  IconButton, InputAdornment, Stack,
+  Box,
+  Button,
+  Container,
+  IconButton,
+  InputAdornment,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const [usuario, setUsuario] = useState("");
@@ -21,8 +28,8 @@ export default function Login() {
     e.preventDefault();
     setLoadingBtn(true);
     try {
-      await login(usuario, password); // llama API de backend
-      navigate("/dashboard", { replace: true }); // 👈 siempre redirige a la página principal
+      await login(usuario, password);
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       alert(err?.response?.data?.message || "Credenciales inválidas.");
     } finally {
@@ -30,57 +37,97 @@ export default function Login() {
     }
   };
 
-  const handleSalir = () => navigate("/"); // también regresa al inicio
+  const handleSalir = () => navigate("/");
 
   return (
-    <Container maxWidth="sm" sx={{ minHeight: "100vh", display: "flex", alignItems: "center" }}>
-      <Paper elevation={3} sx={{ p: { xs: 2, sm: 3 }, width: "100%" }}>
-        <Stack spacing={2} alignItems="center">
-          <Typography variant="h5" align="center" sx={{ fontWeight: 700 }}>
-            Inicio de Sesión
-          </Typography>
-        </Stack>
-
-        <Box
-          component="form"
-          onSubmit={handleLogin}
-          sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        px: 2,
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, sm: 3.5 },
+            borderRadius: 4,
+            backgroundImage:
+              "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)",
+          }}
         >
-          <TextField
-            label="Usuario"
-            value={usuario}
-            onChange={(e) => setUsuario(e.target.value)}
-            fullWidth
-            required
-            autoFocus
-          />
+          <Stack spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+            <Box
+              sx={{
+                width: 46,
+                height: 46,
+                borderRadius: 3,
+                background:
+                  "linear-gradient(135deg, var(--eo-primary), var(--eo-primary2))",
+                border: "1px solid var(--eo-border)",
+              }}
+            />
+            <Typography variant="h5" align="center" sx={{ fontWeight: 900 }}>
+              Inicio de Sesión
+            </Typography>
+            <Typography color="text.secondary" align="center">
+              Accede al panel para gestionar envíos, clientes y catálogos.
+            </Typography>
+          </Stack>
 
-          <TextField
-            label="Contraseña"
-            type={showPwd ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            fullWidth
-            required
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPwd((s) => !s)} edge="end">
-                    {showPwd ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Box
+            component="form"
+            onSubmit={handleLogin}
+            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+          >
+            <TextField
+              label="Usuario"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
+              fullWidth
+              required
+              autoFocus
+            />
 
-          <Button variant="contained" color="primary" type="submit" disabled={!usuario || !password || loadingBtn}>
-            {loadingBtn ? "Ingresando..." : "Entrar"}
-          </Button>
-          <Button variant="outlined" color="secondary" onClick={handleSalir}>
-            Salir
-          </Button>
-        </Box>
-      </Paper>
-    </Container>
+            <TextField
+              label="Contraseña"
+              type={showPwd ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              fullWidth
+              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPwd((s) => !s)}
+                      edge="end"
+                    >
+                      {showPwd ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={!usuario || !password || loadingBtn}
+              sx={{ py: 1.2 }}
+            >
+              {loadingBtn ? "Ingresando..." : "Entrar"}
+            </Button>
+            <Button variant="outlined" color="inherit" onClick={handleSalir}>
+              Salir
+            </Button>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
+

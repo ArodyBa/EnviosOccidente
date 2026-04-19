@@ -28,6 +28,12 @@ const papeleriaRoutes = require('./routes/papeleria');
 const enviosRoutes = require('./routes/envios');
 const sliderRoutes = require('./routes/slider');
 const cajaRoutes = require('./routes/caja');
+const supportRoutes = require('./routes/support');
+const { startTelegramBot } = require('./services/telegram');
+const { requireRole } = require('./middlewares/roles.middleware');
+const usuariosRoutes = require('./routes/usuarios');
+const rolesRoutes = require('./routes/roles');
+const menusRoutes = require('./routes/menus');
 
 const app = express();
 
@@ -152,6 +158,10 @@ app.use('/papeleria', verifyJWT, papeleriaRoutes);
 app.use('/envios', verifyJWT, enviosRoutes);
 app.use('/slider', verifyJWT, sliderRoutes);
 app.use('/caja', verifyJWT, cajaRoutes);
+app.use('/support', verifyJWT, supportRoutes);
+app.use('/usuarios', verifyJWT, requireRole('Admin'), usuariosRoutes);
+app.use('/roles', verifyJWT, requireRole('Admin'), rolesRoutes);
+app.use('/menus', verifyJWT, requireRole('Admin'), menusRoutes);
 
 // Público: tracking + slider
 
@@ -159,5 +169,5 @@ app.use('/caja', verifyJWT, cajaRoutes);
 console.log(`Servidor ejecutándose en modo: ${config.NODE_ENV}`);
 app.listen(config.PORT, () => {
   console.log(`Servidor iniciado en http://localhost:${config.PORT}`);
+  startTelegramBot().catch((e) => console.error('telegram start:', e.message));
 });
-

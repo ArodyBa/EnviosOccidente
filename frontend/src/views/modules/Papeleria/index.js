@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import {
     Box,
@@ -20,6 +20,7 @@ import {
     eliminarDocumentoPapeleria,
     updatePapeleriaItem,
 } from "../../../services/modules/Papeleria";
+import { dataTableStylesDark } from '../../../styles/dataTableStyles';
 
 const Papeleria = () => {
     const [clientes, setClientes] = useState([]);
@@ -54,7 +55,7 @@ const Papeleria = () => {
             const data = await getPapeleria(id_cliente);
             setPapeleria(Array.isArray(data) ? data : []);
         } catch (e) {
-            console.error("Error cargando papelería:", e);
+            console.error("Error cargando papelerÃ­a:", e);
         }
     };
 
@@ -122,7 +123,7 @@ const Papeleria = () => {
     };
 */
     const handleDeleteItem = async (row) => {
-        if (!window.confirm("¿Eliminar este documento?")) return;
+        if (!window.confirm("Â¿Eliminar este documento?")) return;
         try {
             await eliminarDocumentoPapeleria(row.id_papeleria);
             await fetchPapeleria(selectedCliente.id_cliente);
@@ -138,7 +139,7 @@ const Papeleria = () => {
 
             if (editData.file) {
                 console.log(selectedCliente, "clieeeeeeeente")
-                // Reemplaza archivo (borra anterior si existía) + actualiza metadatos
+                // Reemplaza archivo (borra anterior si existÃ­a) + actualiza metadatos
                 console.log(editData.nombre_documento, selectedCliente.nombre, selectedCliente.dpi, editRow.tipo_documento)
                 await subirDocumento({
 
@@ -237,7 +238,7 @@ const Papeleria = () => {
                     { name: "Nombre", selector: (row) => row.nombre, sortable: true },
                     { name: "DPI", selector: (row) => row.dpi || "", sortable: true },
                     {
-                        name: "Papelería",
+                        name: "PapelerÃ­a",
                         cell: (row) => (
                             <IconButton onClick={() => handleOpenPapeleriaModal(row)}>
                                 <VisibilityIcon />
@@ -247,15 +248,16 @@ const Papeleria = () => {
                 ]}
                 data={clientes}
                 pagination
+                customStyles={dataTableStylesDark}
             />
 
-            {/* Modal papelería por cliente */}
+            {/* Modal papelerÃ­a por cliente */}
             <Dialog open={openPapeleriaModal} onClose={handleClosePapeleriaModal} maxWidth="lg" fullWidth>
                 <DialogTitle>
-                    Papelería de {selectedCliente?.nombre}
+                    PapelerÃ­a de {selectedCliente?.nombre}
                 </DialogTitle>
                 <DialogContent>
-                    <DataTable title="Papelería" columns={papeleriaColumns} data={papeleria} pagination />
+                    <DataTable title="PapelerÃ­a" columns={papeleriaColumns} data={papeleria} pagination customStyles={dataTableStylesDark} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClosePapeleriaModal} color="secondary">Cerrar</Button>
@@ -287,7 +289,7 @@ const Papeleria = () => {
                         </label>
                         {editData.file && <p>Seleccionado: {editData.file.name}</p>}
                     </div>
-                    <p style={{ fontSize: 12, color: "#666" }}>
+                    <p style={{ fontSize: 12, color: "var(--eo-muted)" }}>
                         * Si no seleccionas archivo, se actualiza solo la fecha.
                     </p>
                 </DialogContent>
@@ -301,3 +303,4 @@ const Papeleria = () => {
 };
 
 export default Papeleria;
+

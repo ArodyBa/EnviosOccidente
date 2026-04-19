@@ -19,6 +19,7 @@ import {
   actualizarDocumento,
   eliminarDocumento,
 } from "../../../services/modules/Documentos";
+import { dataTableStylesDark } from "../../../styles/dataTableStyles";
 
 const Documentos = () => {
   const [documentos, setDocumentos] = useState([]);
@@ -120,9 +121,7 @@ const Documentos = () => {
     },
   ];
 
-  const customStyles = {
-    headCells: { style: { backgroundColor: "#000", color: "#fff", fontWeight: "bold" } },
-  };
+  const customStyles = dataTableStylesDark;
 
   if (loading) return <p>Cargando...</p>;
   if (error) return <p>{error}</p>;

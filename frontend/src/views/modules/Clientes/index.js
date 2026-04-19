@@ -12,7 +12,11 @@ import {
   IconButton,
   Checkbox,
   FormControlLabel,
+  Paper,
+  Stack,
+  Typography,
 } from "@mui/material";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
@@ -22,6 +26,7 @@ import {
   actualizarCliente,
   eliminarCliente,
 } from "../../../services/modules/Clientes";
+import { dataTableStylesDark } from "../../../styles/dataTableStyles";
 
 const Clientes = () => {
   const [clientes, setClientes] = useState([]);
@@ -130,19 +135,19 @@ const Clientes = () => {
       console.log(formData)
     } catch (error) {
       console.error("Error al guardar cliente:", error);
-      alert("Ocurrió un error al guardar el cliente.");
+      alert("OcurriÃ³ un error al guardar el cliente.");
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
+    if (window.confirm("Â¿EstÃ¡s seguro de que deseas eliminar este cliente?")) {
       try {
         await eliminarCliente(id);
         alert("Cliente eliminado exitosamente.");
         fetchClientes();
       } catch (error) {
         console.error("Error al eliminar cliente:", error);
-        alert("Ocurrió un error al eliminar el cliente.");
+        alert("OcurriÃ³ un error al eliminar el cliente.");
       }
     }
   };
@@ -151,8 +156,8 @@ const Clientes = () => {
     { name: "Nombre", selector: (row) => row.nombre, sortable: true },
     { name: "DPI", selector: (row) => row.dpi, sortable: true },
     { name: "NIT", selector: (row) => row.nit, sortable: true },
-    { name: "Teléfono", selector: (row) => row.telefono, sortable: true },
-    { name: "Dirección", selector: (row) => row.direccion, sortable: true },
+    { name: "TelÃ©fono", selector: (row) => row.telefono, sortable: true },
+    { name: "DirecciÃ³n", selector: (row) => row.direccion, sortable: true },
     { name: "Saldo", selector: (row) => `Q${parseFloat(row.Saldo || 0).toFixed(2)}`, sortable: true },
 
     {
@@ -173,88 +178,88 @@ const Clientes = () => {
     },
   ];
 
-  const customStyles = {
-    headCells: {
-      style: {
-        backgroundColor: "#000000",
-        color: "#ffffff",
-        fontWeight: "bold",
-        textAlign: "center",
-      },
-    },
-    rows: {
-      style: {
-        "&:hover": {
-          backgroundColor: "#f0f0f0",
-        },
-      },
-    },
-    cells: {
-      style: {
-        textAlign: "left",
-      },
-    },
-  };
+  const customStyles = dataTableStylesDark;
 
-  if (loading) return <p>Cargando...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <Typography color="text.secondary">Cargando...</Typography>;
+
+  if (error) return <Typography color="error.main">{error}</Typography>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Clientes</h1>
-      <Box display="flex" alignItems="center" gap="10px" marginBottom="20px">
-        <TextField
-          label="Buscar por DPI"
-          value={searchDPI}
-          onChange={(e) => setSearchDPI(e.target.value)}
-          variant="outlined"
-        />
+    <Box>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        alignItems={{ xs: "stretch", sm: "center" }}
+        justifyContent="space-between"
+        sx={{ mb: 2 }}
+      >
+        <Box>
+          <Typography variant="h4">Clientes</Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Alta, ediciÃ³n y bÃºsqueda rÃ¡pida.
+          </Typography>
+        </Box>
         <Button
           variant="contained"
-          color="primary"
-          onClick={handleSearchDPI}
-          startIcon={<SearchIcon />}
+          onClick={() => handleOpenModal()}
+          startIcon={<AddRoundedIcon />}
         >
-          Buscar
+          Nuevo cliente
         </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={() => setFilteredClientes(clientes)}
+      </Stack>
+
+      <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 4 }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1.5}
+          alignItems={{ xs: "stretch", sm: "center" }}
         >
-          Mostrar Todos
-        </Button>
-      </Box>
-      <DataTable
-        title="Lista de Clientes"
-        columns={columns}
-        data={filteredClientes}
-        pagination
-        highlightOnHover
-        pointerOnHover
-        customStyles={customStyles}
-      />
-      <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
-        <Button variant="contained" color="error" onClick={() => alert("Salir del sistema")}>
-          Salir
-        </Button>
-        <Button variant="contained" color="primary" onClick={() => handleOpenModal()}>
-          Ingresar Cliente
-        </Button>
-      </Box>
+          <TextField
+            label="Buscar por DPI"
+            value={searchDPI}
+            onChange={(e) => setSearchDPI(e.target.value)}
+            variant="outlined"
+            sx={{ flex: 1 }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSearchDPI}
+            startIcon={<SearchIcon />}
+          >
+            Buscar
+          </Button>
+          <Button variant="outlined" onClick={() => setFilteredClientes(clientes)}>
+            Mostrar todos
+          </Button>
+        </Stack>
+
+        <Box sx={{ mt: 2 }}>
+          <DataTable
+            columns={columns}
+            data={filteredClientes}
+            pagination
+            highlightOnHover
+            pointerOnHover
+            responsive
+            dense
+            customStyles={customStyles}
+          />
+        </Box>
+      </Paper>
       <Dialog open={open} onClose={handleCloseModal}>
         <DialogTitle>{formData.id ? "Editar Cliente" : "Ingresar Cliente"}</DialogTitle>
         <DialogContent>
           <TextField label="Nombre" name="nombre" value={formData.nombre} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="DPI" name="dpi" value={formData.dpi} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="NIT" name="nit" value={formData.nit} onChange={handleChange} fullWidth margin="normal" />
-          <TextField label="Dirección" name="direccion" value={formData.direccion} onChange={handleChange} fullWidth margin="normal" />
-          <TextField label="Teléfono" name="telefono" value={formData.telefono} onChange={handleChange} fullWidth margin="normal" />
+          <TextField label="DirecciÃ³n" name="direccion" value={formData.direccion} onChange={handleChange} fullWidth margin="normal" />
+          <TextField label="TelÃ©fono" name="telefono" value={formData.telefono} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="Correo" name="correo" value={formData.correo} onChange={handleChange} fullWidth margin="normal" />
-          <TextField label="Código Postal" name="codigo_postal" value={formData.codigo_postal} onChange={handleChange} fullWidth margin="normal" />
+          <TextField label="CÃ³digo Postal" name="codigo_postal" value={formData.codigo_postal} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="Municipio" name="municipio" value={formData.municipio} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="Departamento" name="departamento" value={formData.departamento} onChange={handleChange} fullWidth margin="normal" />
-          <TextField label="País" name="pais" value={formData.pais} onChange={handleChange} fullWidth margin="normal" />
+          <TextField label="PaÃ­s" name="pais" value={formData.pais} onChange={handleChange} fullWidth margin="normal" />
           <FormControlLabel
             control={
               <Checkbox
@@ -263,7 +268,7 @@ const Clientes = () => {
                 name="tiene_credito"
               />
             }
-            label="¿Tiene crédito?"
+            label="Â¿Tiene crÃ©dito?"
           />
         </DialogContent>
         <DialogActions>
@@ -273,8 +278,11 @@ const Clientes = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 
 export default Clientes;
+
+
+

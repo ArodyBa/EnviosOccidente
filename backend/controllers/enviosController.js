@@ -1,11 +1,13 @@
-const db = require('../config/db');
+﻿const db = require('../config/db');
+const { sendStatusChange } = require('../services/whatsappService');
+const { notifyTrackingUpdate } = require('../services/telegram');
 
 const getDefaultEstadoId = async (conn) => {
   const [[row]] = await conn.query(`SELECT id_estado_envio FROM estados_envio WHERE activo=1 ORDER BY orden LIMIT 1`);
   return row?.id_estado_envio || null;
 };
 
-// Nota: tracking_code ahora se ingresa manualmente al crear el envío
+// Nota: tracking_code ahora se ingresa manualmente al crear el envÃ­o
 
 // GET /envios/tipos
 const getTiposEnvio = async (_req, res) => {
@@ -14,7 +16,7 @@ const getTiposEnvio = async (_req, res) => {
     res.json(rows);
   } catch (e) {
     console.error('getTiposEnvio:', e.message);
-    res.status(500).json({ message: 'Error al obtener tipos de envío' });
+    res.status(500).json({ message: 'Error al obtener tipos de envÃ­o' });
   }
 };
 
@@ -30,7 +32,7 @@ const createTipoEnvio = async (req, res) => {
     res.status(201).json({ id_tipo_envio: r.insertId, nombre, priced_by_weight: !!priced_by_weight });
   } catch (e) {
     console.error('createTipoEnvio:', e.message);
-    res.status(500).json({ message: 'Error al crear tipo de envío' });
+    res.status(500).json({ message: 'Error al crear tipo de envÃ­o' });
   }
 };
 
@@ -78,14 +80,14 @@ const crearEnvio = async (req, res) => {
     if (v === undefined || v === null) return true;
     if (typeof v === 'boolean') return v;
     const s = String(v).toLowerCase();
-    return ['1','true','t','si','sí','yes','y'].includes(s);
+    return ['1','true','t','si','sÃ­','yes','y'].includes(s);
   })();
   if (!fecha || !id_cliente || !Array.isArray(detalles) || detalles.length === 0) {
     return res.status(400).json({ message: 'fecha, id_cliente y al menos un detalle son requeridos' });
   }
   const code = String(tracking_code || '').trim();
   if (!code) return res.status(400).json({ message: 'tracking_code es requerido' });
-  // Si el pago es en efectivo, exigir que exista una caja abierta antes de crear el envío
+  // Si el pago es en efectivo, exigir que exista una caja abierta antes de crear el envÃ­o
   try {
     if (pagoEfectivo) {
       const [[ap]] = await db.query(
@@ -93,12 +95,12 @@ const crearEnvio = async (req, res) => {
       );
       if (!ap) {
         return res.status(409).json({
-          message: 'No hay una caja ABIERTA. Debe aperturar caja antes de registrar envíos pagados en efectivo.'
+          message: 'No hay una caja ABIERTA. Debe aperturar caja antes de registrar envÃ­os pagados en efectivo.'
         });
       }
     }
   } catch (e) {
-    console.error('validación caja abierta (envíos):', e.message);
+    console.error('validaciÃ³n caja abierta (envÃ­os):', e.message);
     return res.status(500).json({ message: 'Error validando caja abierta' });
   }
 
@@ -131,7 +133,7 @@ const crearEnvio = async (req, res) => {
       const descripcion = d.descripcion || null;
 
       if (!id_tipo_envio || cantidad <= 0) {
-        throw new Error('Detalle inválido: tipo y cantidad son requeridos');
+        throw new Error('Detalle invÃ¡lido: tipo y cantidad son requeridos');
       }
 
       let precio_unitario = d.precio_unitario != null ? Number(d.precio_unitario) : null;
@@ -170,19 +172,19 @@ const crearEnvio = async (req, res) => {
           );
         } else {
           // Sin caja abierta, no forzamos error para no perder el envio; solo avisamos en logs
-          console.warn('crearEnvio: no hay caja abierta, no se registró movimiento de caja');
+          console.warn('crearEnvio: no hay caja abierta, no se registrÃ³ movimiento de caja');
         }
       }
     } catch (cx) {
       console.error('crearEnvio caja_movimientos error:', cx.message);
-      // No hacemos rollback por esto para no perder el envío; si prefieres estrictamente forzar caja abierta, aquí podrías lanzar error
+      // No hacemos rollback por esto para no perder el envÃ­o; si prefieres estrictamente forzar caja abierta, aquÃ­ podrÃ­as lanzar error
     }
 
     // Estado inicial
     const estadoInicial = await getDefaultEstadoId(conn);
     if (estadoInicial) {
       await conn.query(`UPDATE envios SET id_estado_actual=? WHERE id_envio=?`, [estadoInicial, id_envio]);
-      await conn.query(`INSERT INTO envios_tracking (id_envio, id_estado_envio, nota) VALUES (?,?,?)`, [id_envio, estadoInicial, 'Creación de envío']);
+      await conn.query(`INSERT INTO envios_tracking (id_envio, id_estado_envio, nota) VALUES (?,?,?)`, [id_envio, estadoInicial, 'Creacion de Envio']);
     }
 
     await conn.commit();
@@ -191,7 +193,7 @@ const crearEnvio = async (req, res) => {
     await conn.rollback();
     console.error('crearEnvio:', e.message);
     const status = e.message && e.message.includes('tracking_code ya existe') ? 409 : 500;
-    res.status(status).json({ message: 'Error al crear envío', error: e.message });
+    res.status(status).json({ message: 'Error al crear envÃ­o', error: e.message });
   } finally {
     conn.release();
   }
@@ -200,7 +202,7 @@ const crearEnvio = async (req, res) => {
 // GET /envios/:id
 const getEnvio = async (req, res) => {
   const id = Number(req.params.id);
-  if (!id) return res.status(400).json({ message: 'id inválido' });
+  if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
   try {
     const [[enc]] = await db.query(
       `SELECT e.*, c.nombre as cliente_nombre
@@ -208,7 +210,7 @@ const getEnvio = async (req, res) => {
        INNER JOIN clientes c ON e.id_cliente=c.id_cliente
        WHERE e.id_envio=?`, [id]
     );
-    if (!enc) return res.status(404).json({ message: 'Envío no encontrado' });
+    if (!enc) return res.status(404).json({ message: 'EnvÃ­o no encontrado' });
     const [det] = await db.query(
       `SELECT d.*, te.nombre AS tipo_nombre, ta.nombre AS tarifa_nombre
        FROM envios_detalle d
@@ -219,11 +221,11 @@ const getEnvio = async (req, res) => {
     res.json({ encabezado: enc, detalle: det });
   } catch (e) {
     console.error('getEnvio:', e.message);
-    res.status(500).json({ message: 'Error al obtener envío' });
+    res.status(500).json({ message: 'Error al obtener envÃ­o' });
   }
 };
 
-// GET /tracking/:code  -> para landing y consulta pública
+// GET /tracking/:code  -> para landing y consulta pÃºblica
 const getTrackingByCode = async (req, res) => {
   const code = String(req.params.code || '').trim();
   if (!code) return res.status(400).json({ message: 'code requerido' });
@@ -254,7 +256,7 @@ const getTrackingByCode = async (req, res) => {
       code: enc.tracking_code,
       status: estados.find(s => s.id_estado_envio === enc.id_estado_actual)?.nombre || 'desconocido',
       progress,
-      checkpoints: hist.map(h => ({ ts: h.fecha_evento, text: `${h.estado}${h.nota ? ` · ${h.nota}` : ''}` })),
+      checkpoints: hist.map(h => ({ ts: h.fecha_evento, text: `${h.estado}${h.nota ? ` Â· ${h.nota}` : ''}` })),
     });
   } catch (e) {
     console.error('getTrackingByCode:', e.message);
@@ -304,15 +306,16 @@ const buscarEnvios = async (req, res) => {
     res.json(rows);
   } catch (e) {
     console.error('buscarEnvios:', e.message);
-    res.status(500).json({ message: 'Error al buscar envíos' });
+    res.status(500).json({ message: 'Error al buscar envÃ­os' });
   }
 };
 
 // POST /envios/:id/estado { id_estado_envio?, nombre?, nota? , createIfMissing? }
 const agregarEstadoEnvio = async (req, res) => {
   const id_envio = Number(req.params.id);
-  if (!id_envio) return res.status(400).json({ message: 'id_envio inválido' });
+  if (!id_envio) return res.status(400).json({ message: 'id_envio invÃ¡lido' });
   const conn = await db.getConnection();
+  let notifyPayload = null;
   try {
     await conn.beginTransaction();
     let { id_estado_envio, nombre, nota, createIfMissing } = req.body || {};
@@ -330,6 +333,24 @@ const agregarEstadoEnvio = async (req, res) => {
 
     await conn.query(`INSERT INTO envios_tracking (id_envio, id_estado_envio, nota) VALUES (?,?,?)`, [id_envio, estadoId, nota || null]);
     await conn.query(`UPDATE envios SET id_estado_actual=? WHERE id_envio=?`, [estadoId, id_envio]);
+
+    const [[info]] = await conn.query(
+      `SELECT c.telefono AS telefono, c.nombre AS cliente, e.tracking_code AS tracking, ee.nombre AS estado
+       FROM envios e
+       JOIN clientes c ON c.id_cliente = e.id_cliente
+       JOIN estados_envio ee ON ee.id_estado_envio = ?
+       WHERE e.id_envio = ?`,
+      [estadoId, id_envio]
+    );
+    if (info?.telefono && info?.tracking && info?.estado) {
+      notifyPayload = {
+        to: info.telefono,
+        tracking: info.tracking,
+        estado: info.estado,
+        clienteNombre: info.cliente,
+      };
+    }
+
     await conn.commit();
     res.json({ ok: true });
   } catch (e) {
@@ -338,6 +359,12 @@ const agregarEstadoEnvio = async (req, res) => {
     res.status(500).json({ message: 'Error al actualizar estado', error: e.message });
   } finally {
     conn.release();
+  }
+  if (notifyPayload) {
+    sendStatusChange(notifyPayload).catch((err) => console.error('whatsapp status envio:', err.message));
+    notifyTrackingUpdate({ tracking: notifyPayload.tracking, estado: notifyPayload.estado }).catch((err) =>
+      console.error('telegram status envio:', err.message)
+    );
   }
 };
 
@@ -349,7 +376,7 @@ module.exports = {
     try {
       const id = Number(req.params.id);
       const { nombre, priced_by_weight, activo } = req.body || {};
-      if (!id) return res.status(400).json({ message: 'id inválido' });
+      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
       await db.query(
         `UPDATE envio_tipos SET 
            nombre = COALESCE(?, nombre),
@@ -367,7 +394,7 @@ module.exports = {
   async deleteTipoEnvio(req, res) {
     try {
       const id = Number(req.params.id);
-      if (!id) return res.status(400).json({ message: 'id inválido' });
+      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
       await db.query(`UPDATE envio_tipos SET activo=0 WHERE id_tipo_envio=?`, [id]);
       res.json({ ok: true });
     } catch (e) {
@@ -381,7 +408,7 @@ module.exports = {
     try {
       const id = Number(req.params.id);
       const { nombre, largo_cm, ancho_cm, alto_cm, peso_base_kg, precio_base, activo } = req.body || {};
-      if (!id) return res.status(400).json({ message: 'id inválido' });
+      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
       await db.query(
         `UPDATE envio_tarifas SET
            nombre = COALESCE(?, nombre),
@@ -411,7 +438,7 @@ module.exports = {
   async deleteTarifaEnvio(req, res) {
     try {
       const id = Number(req.params.id);
-      if (!id) return res.status(400).json({ message: 'id inválido' });
+      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
       await db.query(`UPDATE envio_tarifas SET activo=0 WHERE id_tarifa_envio=?`, [id]);
       res.json({ ok: true });
     } catch (e) {
@@ -429,7 +456,7 @@ module.exports = {
     try {
       const id = Number(req.params.id);
       const { nombre, orden, activo } = req.body || {};
-      if (!id) return res.status(400).json({ message: 'id inválido' });
+      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
       await db.query(
         `UPDATE estados_envio SET
            nombre = COALESCE(?, nombre),
@@ -447,7 +474,7 @@ module.exports = {
   async deleteEstadoEnvio(req, res) {
     try {
       const id = Number(req.params.id);
-      if (!id) return res.status(400).json({ message: 'id inválido' });
+      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
       await db.query(`UPDATE estados_envio SET activo=0 WHERE id_estado_envio=?`, [id]);
       res.json({ ok: true });
     } catch (e) {
@@ -458,3 +485,4 @@ module.exports = {
   buscarEnvios,
   agregarEstadoEnvio,
 };
+

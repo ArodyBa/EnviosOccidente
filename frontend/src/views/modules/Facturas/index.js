@@ -17,6 +17,7 @@ import {
   anularFactura,
   anularVenta,
 } from "../../../services/modules/Facturas";
+import { dataTableStylesDark } from "../../../styles/dataTableStyles";
 
 const Facturas = () => {
   const [facturas, setFacturas] = useState([]);
@@ -148,28 +149,7 @@ const Facturas = () => {
     },
   ];
 
-  const customStyles = {
-    headCells: {
-      style: {
-        backgroundColor: "#000000",
-        color: "#ffffff",
-        fontWeight: "bold",
-        textAlign: "center",
-      },
-    },
-    rows: {
-      style: {
-        "&:hover": {
-          backgroundColor: "#f0f0f0",
-        },
-      },
-    },
-    cells: {
-      style: {
-        textAlign: "left",
-      },
-    },
-  };
+  const customStyles = dataTableStylesDark;
 
   return (
     <div style={{ padding: "20px" }}>

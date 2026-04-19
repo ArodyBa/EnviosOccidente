@@ -5,6 +5,7 @@ import DataTable from "react-data-table-component";
 import { Button, Box, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaymentIcon from "@mui/icons-material/Payment";
+import { dataTableStylesDark } from "../../../styles/dataTableStyles";
 
 const PrestamosCliente = () => {
   const [clientes, setClientes] = useState([]);
@@ -160,13 +161,26 @@ const PrestamosCliente = () => {
   return (
     <Box sx={{ padding: 3 }}>
       <h1>Gestión de Préstamos</h1>
-      <DataTable title="Clientes" columns={columnsClientes} data={clientes} pagination highlightOnHover />
+      <DataTable
+        title="Clientes"
+        columns={columnsClientes}
+        data={clientes}
+        pagination
+        highlightOnHover
+        customStyles={dataTableStylesDark}
+      />
 
       {/* Modal de Préstamos */}
       <Dialog open={openPrestamos} onClose={() => setOpenPrestamos(false)} maxWidth="md" fullWidth>
         <DialogTitle>Préstamos del Cliente</DialogTitle>
         <DialogContent>
-          <DataTable columns={columnsPrestamos} data={prestamos} pagination highlightOnHover />
+          <DataTable
+            columns={columnsPrestamos}
+            data={prestamos}
+            pagination
+            highlightOnHover
+            customStyles={dataTableStylesDark}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenPrestamos(false)} color="secondary">
@@ -179,7 +193,13 @@ const PrestamosCliente = () => {
       <Dialog open={openCuotas} onClose={() => setOpenCuotas(false)} maxWidth="md" fullWidth>
         <DialogTitle>Cuotas del Préstamo</DialogTitle>
         <DialogContent>
-          <DataTable columns={columnsCuotas} data={cuotas} pagination highlightOnHover />
+          <DataTable
+            columns={columnsCuotas}
+            data={cuotas}
+            pagination
+            highlightOnHover
+            customStyles={dataTableStylesDark}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCuotas(false)} color="secondary">

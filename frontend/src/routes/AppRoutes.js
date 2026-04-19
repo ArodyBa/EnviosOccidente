@@ -26,10 +26,14 @@ import { Estados as EstadosEnvio, TiposTarifas as TiposTarifasEnvio } from '../v
 import About from '../views/About';
 import Precios from '../views/Precios';
 import Caja from '../views/modules/Caja';
+import Chat from '../views/chat/Chat';
+import UsuariosAdmin from '../views/admin/Usuarios';
+import RolesAdmin from '../views/admin/Roles';
+import NoAutorizado from '../views/NoAutorizado';
 
 import ProtectedRoute from '../components/ProtectedRoute';
 import LandingPage from "../views/LandingPage"; // Importar el componente LandingPage
-import FloatingWhatsApp from "../components/FloatingWhatsAppButton";
+import FloatingTelegramButton from "../components/FloatingTelegramButton";
 
 
 const AppRoutes = () => {
@@ -57,6 +61,9 @@ const AppRoutes = () => {
     { path: '/configurarslider', component: <SliderConfig /> },
     { path: '/configurar/slider', component: <SliderConfig /> },
     { path: '/caja', component: <Caja /> },
+    { path: '/chat', component: <Chat /> },
+    { path: '/usuarios', component: <UsuariosAdmin />, rolesAllowed: ['Admin'] },
+    { path: '/roles', component: <RolesAdmin />, rolesAllowed: ['Admin'] },
 
   ];
   return (
@@ -67,14 +74,15 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/about" element={<About />} />
         <Route path="/precios" element={<Precios />} />
+        <Route path="/no-autorizado" element={<NoAutorizado />} />
 
         {/* Rutas protegidas */}
-        {protectedRoutes.map(({ path, component }, index) => (
+        {protectedRoutes.map(({ path, component, rolesAllowed }, index) => (
           <Route
             key={index}
             path={path}
             element={
-              <ProtectedRoute>
+              <ProtectedRoute rolesAllowed={rolesAllowed}>
                 <Layout>{component}</Layout>
               </ProtectedRoute>
             }
@@ -85,7 +93,7 @@ const AppRoutes = () => {
         {/* <Route path="*" element={<div style={{padding:20}}>PÃ¡gina no encontrada</div>} /> */}
       </Routes>
       {/* BotÃ³n flotante de WhatsApp */}
-      <FloatingWhatsApp />
+      <FloatingTelegramButton />
 
     </Router>
   );

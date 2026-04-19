@@ -18,6 +18,7 @@ import {
   actualizarProveedor,
   eliminarProveedor,
 } from "../../../services/modules/Proveedores";
+import { dataTableStylesDark } from "../../../styles/dataTableStyles";
 
 const Proveedores = () => {
   const [proveedores, setProveedores] = useState([]);
@@ -126,28 +127,7 @@ const Proveedores = () => {
     },
   ];
 
-  const customStyles = {
-    headCells: {
-      style: {
-        backgroundColor: "#000000",
-        color: "#ffffff",
-        fontWeight: "bold",
-        textAlign: "center",
-      },
-    },
-    rows: {
-      style: {
-        "&:hover": {
-          backgroundColor: "#f0f0f0",
-        },
-      },
-    },
-    cells: {
-      style: {
-        textAlign: "left",
-      },
-    },
-  };
+  const customStyles = dataTableStylesDark;
 
   return (
     <div style={{ padding: "20px" }}>
