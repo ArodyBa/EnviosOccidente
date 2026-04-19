@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -12,8 +12,10 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ConfirmationNumberOutlinedIcon from "@mui/icons-material/ConfirmationNumberOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { useNavigate } from "react-router-dom";
+import { obtenerOverview } from "../../services/modules/Dashboard";
 
-const StatCard = ({ icon, label, value, actionLabel }) => (
+const StatCard = ({ icon, label, value, actionLabel, onAction }) => (
   <Card sx={{ height: "100%" }}>
     <CardContent>
       <Stack direction="row" spacing={2} alignItems="center">
@@ -43,6 +45,7 @@ const StatCard = ({ icon, label, value, actionLabel }) => (
         size="small"
         endIcon={<ArrowForwardIcon fontSize="small" />}
         sx={{ mt: 2 }}
+        onClick={onAction}
       >
         {actionLabel}
       </Button>
@@ -51,6 +54,40 @@ const StatCard = ({ icon, label, value, actionLabel }) => (
 );
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    envios_entregados: null,
+    incidencias_pendientes: null,
+    tickets_abiertos: null,
+  });
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await obtenerOverview();
+        if (!alive) return;
+        setStats({
+          envios_entregados: Number(data?.envios_entregados ?? 0),
+          incidencias_pendientes: Number(data?.incidencias_pendientes ?? 0),
+          tickets_abiertos: Number(data?.tickets_abiertos ?? 0),
+        });
+      } catch (e) {
+        if (!alive) return;
+        setStats({
+          envios_entregados: 0,
+          incidencias_pendientes: 0,
+          tickets_abiertos: 0,
+        });
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const fmt = (n) => (n === null || n === undefined ? "—" : String(n));
+
   return (
     <Box>
       <Stack
@@ -66,7 +103,9 @@ export default function Dashboard() {
             Resumen rápido del sistema.
           </Typography>
         </Box>
-        <Button variant="contained">Nuevo envío</Button>
+        <Button variant="contained" onClick={() => navigate("/envios")}>
+          Nuevo envío
+        </Button>
       </Stack>
 
       <Grid container spacing={2.5}>
@@ -74,16 +113,18 @@ export default function Dashboard() {
           <StatCard
             icon={<CheckCircleOutlineIcon sx={{ color: "success.main" }} />}
             label="Envíos entregados"
-            value="31"
+            value={fmt(stats.envios_entregados)}
             actionLabel="Ver entregados"
+            onAction={() => navigate("/seguimiento")}
           />
         </Grid>
         <Grid item xs={12} md={4}>
           <StatCard
             icon={<ErrorOutlineIcon sx={{ color: "warning.main" }} />}
             label="Incidencias pendientes"
-            value="12"
+            value={fmt(stats.incidencias_pendientes)}
             actionLabel="Ver incidencias"
+            onAction={() => navigate("/seguimiento")}
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -92,8 +133,9 @@ export default function Dashboard() {
               <ConfirmationNumberOutlinedIcon sx={{ color: "secondary.main" }} />
             }
             label="Tickets abiertos"
-            value="5"
+            value={fmt(stats.tickets_abiertos)}
             actionLabel="Ver tickets"
+            onAction={() => navigate("/chat")}
           />
         </Grid>
 

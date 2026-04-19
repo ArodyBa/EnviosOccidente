@@ -34,6 +34,7 @@ const { requireRole } = require('./middlewares/roles.middleware');
 const usuariosRoutes = require('./routes/usuarios');
 const rolesRoutes = require('./routes/roles');
 const menusRoutes = require('./routes/menus');
+const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
@@ -111,6 +112,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
 // ===== AUTH =====
 app.use('/auth', authRoutes);
+app.use('/dashboard', verifyJWT, dashboardRoutes);
 
 // Endpoints publicos (definir antes de rutas protegidas)
 app.get('/slider', async (req, res) => {

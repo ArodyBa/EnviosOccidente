@@ -196,7 +196,7 @@ const Clientes = () => {
         <Box>
           <Typography variant="h4">Clientes</Typography>
           <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            Alta, ediciÃ³n y bÃºsqueda rÃ¡pida.
+            Alta, edición y busqueda Rápida.
           </Typography>
         </Box>
         <Button
