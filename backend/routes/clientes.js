@@ -9,5 +9,6 @@ router.delete('/:id', clientesController.eliminarCliente);
 
 // ✅ Ruta específica para evitar conflicto
 router.get("/buscar/dpi/:dpi", clientesController.buscarClientePorDPI);
+router.get("/buscar", clientesController.buscarClientes);
 
 module.exports = router;

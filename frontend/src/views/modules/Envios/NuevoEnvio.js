@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Container, Grid, MenuItem, Paper, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, CircularProgress, Container, Grid, MenuItem, Paper, TextField, Typography } from '@mui/material';
 import proyecto from '../../../services/api/Proyecto';
 
 const DetalleRow = ({ index, row, tipos, tarifas, onChange, onRemove }) => {
@@ -88,8 +88,10 @@ const DetalleRow = ({ index, row, tipos, tarifas, onChange, onRemove }) => {
 
 const NuevoEnvio = () => {
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0,10));
-  const [idCliente, setIdCliente] = useState('');
-  const [clientes, setClientes] = useState([]);
+  const [clienteSel, setClienteSel] = useState(null); // {id_cliente,nombre,nit,dpi}
+  const [clienteInput, setClienteInput] = useState('');
+  const [clientesOpts, setClientesOpts] = useState([]);
+  const [clientesLoading, setClientesLoading] = useState(false);
   const [tipos, setTipos] = useState([]);
   const [tarifas, setTarifas] = useState([]);
   const [obs, setObs] = useState('');
@@ -103,12 +105,10 @@ const NuevoEnvio = () => {
     // cargar catálogos
     (async () => {
       try {
-        const [ct, tp, tf] = await Promise.all([
-          proyecto.get('/clientes'),
+        const [tp, tf] = await Promise.all([
           proyecto.get('/envios/tipos'),
           proyecto.get('/envios/tarifas'),
         ]);
-        setClientes(ct.data || []);
         setTipos(tp.data || []);
         setTarifas(tf.data || []);
       } catch (e) {
@@ -116,6 +116,36 @@ const NuevoEnvio = () => {
       }
     })();
   }, []);
+
+  // Autocomplete: buscar clientes por nombre/nit/dpi (debounce)
+  useEffect(() => {
+    let alive = true;
+    const q = String(clienteInput || '').trim();
+
+    const t = setTimeout(async () => {
+      setClientesLoading(true);
+      try {
+        const url = q.length
+          ? `/clientes/buscar?q=${encodeURIComponent(q)}&limit=20`
+          : `/clientes/buscar?limit=20`;
+        const r = await proyecto.get(url);
+        if (!alive) return;
+        setClientesOpts(r.data || []);
+      } catch (e) {
+        if (!alive) return;
+        setClientesOpts([]);
+      } finally {
+        if (alive) setClientesLoading(false);
+      }
+    }, q.length ? 250 : 0);
+
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [clienteInput]);
+
+  const idCliente = clienteSel?.id_cliente ? String(clienteSel.id_cliente) : '';
 
   const onChangeRow = (i, patch) => {
     setDetalle(prev => prev.map((r, idx) => idx === i ? { ...r, ...patch } : r));
@@ -177,18 +207,44 @@ const NuevoEnvio = () => {
             />
           </Grid>
           <Grid item xs={12} md={4}>
-            <TextField
-              label="Cliente"
-              select
-              value={idCliente}
-              onChange={e => setIdCliente(e.target.value)}
-              size="small"
-              fullWidth
-            >
-              {clientes.map(c => (
-                <MenuItem key={c.id_cliente} value={c.id_cliente}>{c.nombre}</MenuItem>
-              ))}
-            </TextField>
+            <Autocomplete
+              value={clienteSel}
+              onChange={(_e, v) => setClienteSel(v || null)}
+              inputValue={clienteInput}
+              onInputChange={(_e, v) => setClienteInput(v)}
+              options={clientesOpts}
+              loading={clientesLoading}
+              isOptionEqualToValue={(o, v) => Number(o?.id_cliente) === Number(v?.id_cliente)}
+              getOptionLabel={(o) => {
+                const nombre = o?.nombre ? String(o.nombre) : '';
+                const dpi = o?.dpi ? String(o.dpi) : '';
+                const nit = o?.nit ? String(o.nit) : '';
+                const extra = [dpi && `DPI: ${dpi}`, nit && `NIT: ${nit}`].filter(Boolean).join(' · ');
+                return extra ? `${nombre} (${extra})` : nombre;
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Cliente (buscar por nombre/DPI/NIT)"
+                  size="small"
+                  fullWidth
+                  required
+                  error={!idCliente}
+                  helperText={!idCliente ? 'Requerido' : ' '}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {clientesLoading ? (
+                          <CircularProgress color="inherit" size={16} sx={{ mr: 1 }} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+            />
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField

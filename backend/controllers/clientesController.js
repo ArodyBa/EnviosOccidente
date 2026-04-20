@@ -154,10 +154,50 @@ const buscarClientePorDPI = async (req, res) => {
   }
 };
 
+// Buscar clientes por nombre/nit/dpi (autocomplete)
+const buscarClientes = async (req, res) => {
+  try {
+    const q = String(req.query?.q || "").trim();
+    const limit = Math.min(50, Math.max(1, Number(req.query?.limit) || 20));
+
+    if (!q) {
+      const [rows] = await db.query(
+        `SELECT id_cliente, nombre, nit, dpi
+           FROM clientes
+          ORDER BY id_cliente DESC
+          LIMIT ?`,
+        [limit]
+      );
+      return res.json(rows || []);
+    }
+
+    const like = `%${q}%`;
+    const [rows] = await db.query(
+      `SELECT id_cliente, nombre, nit, dpi
+         FROM clientes
+        WHERE nombre LIKE ?
+           OR nit LIKE ?
+           OR dpi LIKE ?
+        ORDER BY
+          CASE WHEN dpi = ? THEN 0 ELSE 1 END,
+          CASE WHEN nit = ? THEN 0 ELSE 1 END,
+          nombre ASC
+        LIMIT ?`,
+      [like, like, like, q, q, limit]
+    );
+
+    return res.json(rows || []);
+  } catch (error) {
+    console.error("Error al buscar clientes:", error.message, error.stack);
+    return res.status(500).json({ message: "Error al buscar clientes" });
+  }
+};
+
 module.exports = {
   getClientes,
   crearCliente,
   actualizarCliente,
   eliminarCliente,
   buscarClientePorDPI,
+  buscarClientes,
 };

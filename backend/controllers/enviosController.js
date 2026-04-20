@@ -133,7 +133,7 @@ const crearEnvio = async (req, res) => {
       const descripcion = d.descripcion || null;
 
       if (!id_tipo_envio || cantidad <= 0) {
-        throw new Error('Detalle invÃ¡lido: tipo y cantidad son requeridos');
+        throw new Error('Detalle invalido: tipo y cantidad son requeridos');
       }
 
       let precio_unitario = d.precio_unitario != null ? Number(d.precio_unitario) : null;
@@ -193,7 +193,7 @@ const crearEnvio = async (req, res) => {
     await conn.rollback();
     console.error('crearEnvio:', e.message);
     const status = e.message && e.message.includes('tracking_code ya existe') ? 409 : 500;
-    res.status(status).json({ message: 'Error al crear envÃ­o', error: e.message });
+    res.status(status).json({ message: 'Error al crear envio', error: e.message });
   } finally {
     conn.release();
   }
@@ -210,7 +210,7 @@ const getEnvio = async (req, res) => {
        INNER JOIN clientes c ON e.id_cliente=c.id_cliente
        WHERE e.id_envio=?`, [id]
     );
-    if (!enc) return res.status(404).json({ message: 'EnvÃ­o no encontrado' });
+    if (!enc) return res.status(404).json({ message: 'Envio no encontrado' });
     const [det] = await db.query(
       `SELECT d.*, te.nombre AS tipo_nombre, ta.nombre AS tarifa_nombre
        FROM envios_detalle d
@@ -256,7 +256,7 @@ const getTrackingByCode = async (req, res) => {
       code: enc.tracking_code,
       status: estados.find(s => s.id_estado_envio === enc.id_estado_actual)?.nombre || 'desconocido',
       progress,
-      checkpoints: hist.map(h => ({ ts: h.fecha_evento, text: `${h.estado}${h.nota ? ` Â· ${h.nota}` : ''}` })),
+      checkpoints: hist.map(h => ({ ts: h.fecha_evento, text: `${h.estado}${h.nota ? `  :· ${h.nota}` : ''}` })),
     });
   } catch (e) {
     console.error('getTrackingByCode:', e.message);
@@ -306,14 +306,14 @@ const buscarEnvios = async (req, res) => {
     res.json(rows);
   } catch (e) {
     console.error('buscarEnvios:', e.message);
-    res.status(500).json({ message: 'Error al buscar envÃ­os' });
+    res.status(500).json({ message: 'Error al buscar envi­os' });
   }
 };
 
 // POST /envios/:id/estado { id_estado_envio?, nombre?, nota? , createIfMissing? }
 const agregarEstadoEnvio = async (req, res) => {
   const id_envio = Number(req.params.id);
-  if (!id_envio) return res.status(400).json({ message: 'id_envio invÃ¡lido' });
+  if (!id_envio) return res.status(400).json({ message: 'id_envio invalido' });
   const conn = await db.getConnection();
   let notifyPayload = null;
   try {
@@ -376,7 +376,7 @@ module.exports = {
     try {
       const id = Number(req.params.id);
       const { nombre, priced_by_weight, activo } = req.body || {};
-      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
+      if (!id) return res.status(400).json({ message: 'id invalido' });
       await db.query(
         `UPDATE envio_tipos SET 
            nombre = COALESCE(?, nombre),
@@ -394,7 +394,7 @@ module.exports = {
   async deleteTipoEnvio(req, res) {
     try {
       const id = Number(req.params.id);
-      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
+      if (!id) return res.status(400).json({ message: 'id invalido' });
       await db.query(`UPDATE envio_tipos SET activo=0 WHERE id_tipo_envio=?`, [id]);
       res.json({ ok: true });
     } catch (e) {
@@ -408,7 +408,7 @@ module.exports = {
     try {
       const id = Number(req.params.id);
       const { nombre, largo_cm, ancho_cm, alto_cm, peso_base_kg, precio_base, activo } = req.body || {};
-      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
+      if (!id) return res.status(400).json({ message: 'id invalido' });
       await db.query(
         `UPDATE envio_tarifas SET
            nombre = COALESCE(?, nombre),
@@ -438,7 +438,7 @@ module.exports = {
   async deleteTarifaEnvio(req, res) {
     try {
       const id = Number(req.params.id);
-      if (!id) return res.status(400).json({ message: 'id invÃ¡lido' });
+      if (!id) return res.status(400).json({ message: 'id invalido' });
       await db.query(`UPDATE envio_tarifas SET activo=0 WHERE id_tarifa_envio=?`, [id]);
       res.json({ ok: true });
     } catch (e) {

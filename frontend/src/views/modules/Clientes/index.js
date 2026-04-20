@@ -140,7 +140,7 @@ const Clientes = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Â¿EstÃ¡s seguro de que deseas eliminar este cliente?")) {
+    if (window.confirm("¿EStas seguro de que deseas eliminar este cliente?")) {
       try {
         await eliminarCliente(id);
         alert("Cliente eliminado exitosamente.");
@@ -156,8 +156,8 @@ const Clientes = () => {
     { name: "Nombre", selector: (row) => row.nombre, sortable: true },
     { name: "DPI", selector: (row) => row.dpi, sortable: true },
     { name: "NIT", selector: (row) => row.nit, sortable: true },
-    { name: "TelÃ©fono", selector: (row) => row.telefono, sortable: true },
-    { name: "DirecciÃ³n", selector: (row) => row.direccion, sortable: true },
+    { name: "Telefono", selector: (row) => row.telefono, sortable: true },
+    { name: "Direccion", selector: (row) => row.direccion, sortable: true },
     { name: "Saldo", selector: (row) => `Q${parseFloat(row.Saldo || 0).toFixed(2)}`, sortable: true },
 
     {
@@ -253,7 +253,7 @@ const Clientes = () => {
           <TextField label="Nombre" name="nombre" value={formData.nombre} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="DPI" name="dpi" value={formData.dpi} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="NIT" name="nit" value={formData.nit} onChange={handleChange} fullWidth margin="normal" />
-          <TextField label="DirecciÃ³n" name="direccion" value={formData.direccion} onChange={handleChange} fullWidth margin="normal" />
+          <TextField label="Direccionn" name="direccion" value={formData.direccion} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="TelÃ©fono" name="telefono" value={formData.telefono} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="Correo" name="correo" value={formData.correo} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="CÃ³digo Postal" name="codigo_postal" value={formData.codigo_postal} onChange={handleChange} fullWidth margin="normal" />
@@ -268,7 +268,7 @@ const Clientes = () => {
                 name="tiene_credito"
               />
             }
-            label="Â¿Tiene crÃ©dito?"
+            label="Tiene Crédito?"
           />
         </DialogContent>
         <DialogActions>

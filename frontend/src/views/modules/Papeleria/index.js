@@ -123,7 +123,7 @@ const Papeleria = () => {
     };
 */
     const handleDeleteItem = async (row) => {
-        if (!window.confirm("Â¿Eliminar este documento?")) return;
+        if (!window.confirm("¿Eliminar este documento?")) return;
         try {
             await eliminarDocumentoPapeleria(row.id_papeleria);
             await fetchPapeleria(selectedCliente.id_cliente);
