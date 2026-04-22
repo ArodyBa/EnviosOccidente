@@ -320,7 +320,7 @@ async function handlePrivateMessage(user, msg) {
     return;
   }
 
-  if (text === "/start" || text === "/menu") {
+  if (text === "/menu" || text.startsWith("/start")) {
     await setState(user.telegram_user_id, "idle");
     await sendMainMenu(chatId);
     return;

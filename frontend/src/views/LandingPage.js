@@ -4,17 +4,21 @@ import {
   Button,
   Container,
   Grid,
+  IconButton,
   Paper,
   Typography,
   Chip,
+  Tooltip,
 } from "@mui/material";
 import { keyframes } from "@emotion/react";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import ShieldIcon from "@mui/icons-material/Shield";
+import TelegramIcon from "@mui/icons-material/Telegram";
 import NavigationBar from "../components/NavigationBar";
 import TrackingWidget from "../components/TrackingWidget";
 import SliderHero from "../components/SliderHero";
+import { getTelegramBotLink } from "../utils/telegram";
 
 const floatUp = keyframes`
   0% { transform: translateY(0px); }
@@ -36,6 +40,7 @@ const pulse = keyframes`
 
 const LandingPage = () => {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
+  const telegramLink = useMemo(() => getTelegramBotLink(), []);
 
   return (
     <>
@@ -74,6 +79,45 @@ const LandingPage = () => {
               <Box id="rastreo" sx={{ mt: 4 }}>
                 <TrackingWidget />
               </Box>
+
+              {telegramLink ? (
+                <Box sx={{ mt: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Tooltip title="Abrir bot de Telegram">
+                      <IconButton
+                        component="a"
+                        href={telegramLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{
+                          width: 46,
+                          height: 46,
+                          borderRadius: "50%",
+                          border: "1px solid rgba(255,255,255,0.22)",
+                          color: "#E5E7EB",
+                          background: "rgba(255,255,255,0.08)",
+                          "&:hover": { background: "rgba(255,255,255,0.12)" },
+                        }}
+                      >
+                        <TelegramIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Button
+                      component="a"
+                      href={telegramLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="text"
+                      sx={{ color: "#e5e7eb", textTransform: "none" }}
+                    >
+                      Abrir Telegram
+                    </Button>
+                  </Box>
+                  <Typography variant="caption" sx={{ display: "block", mt: 0.75, color: "#cbd5e1" }}>
+                    Al abrir, Telegram enviará <code>/start</code> (puede pedirte presionar “Start” la primera vez).
+                  </Typography>
+                </Box>
+              ) : null}
 
               <Box sx={{ display: "flex", gap: 3, mt: 4, flexWrap: "wrap" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>

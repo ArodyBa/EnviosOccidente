@@ -1,13 +1,10 @@
 import React from "react";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import TelegramIcon from "@mui/icons-material/Telegram";
+import { getTelegramBotLink } from "../utils/telegram";
 
 export default function FloatingTelegramButton() {
-  const link =
-    process.env.REACT_APP_TELEGRAM_BOT_LINK ||
-    (process.env.REACT_APP_TELEGRAM_BOT_USERNAME
-      ? `https://t.me/${process.env.REACT_APP_TELEGRAM_BOT_USERNAME}`
-      : null);
+  const link = getTelegramBotLink();
 
   if (!link) return null;
 
@@ -44,4 +41,3 @@ export default function FloatingTelegramButton() {
     </Box>
   );
 }
-
